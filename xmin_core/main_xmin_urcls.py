@@ -56,7 +56,9 @@ def main_xmin_one_aoi(
     hex_grids = get_population_info_hex_grids(raster_s3_settings, hex_grids, aoi)
 
     # 2.3 get reachable poi counts for each categories, mode, and timeframe.
-    pois_cnt_cates_files = get_reachable_poi_cnt_categories(ors_settings, hex_grids, city_pois_cates_files, workdir)
+    pois_cnt_cates_files = get_reachable_poi_cnt_categories(
+        ors_settings, hex_grids, city_pois_cates_files, est_utm_crs, workdir
+    )
 
     # 2.4 get score
     get_xmin_index_score(hex_grids, pois_cnt_cates_files, workdir, is_normalize=True)

@@ -26,7 +26,6 @@ def get_city_pois_categories(buffered_polygon: Polygon, est_utm_crs: CRS, savedi
         log.info(f'Getting pois modes for {category.name}')
         tags = category.value  # dict
         most_pois_cate = ox.features.features_from_polygon(buffered_polygon, tags=tags)
-        most_pois_cate = most_pois_cate[['geometry']]
 
         # convert multiple geometries to single point
         most_pois_cate = geometry_to_single_point(most_pois_cate, est_utm_crs)

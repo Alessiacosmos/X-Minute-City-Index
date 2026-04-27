@@ -8,6 +8,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import requests
+from pyproj import CRS
 from tqdm import tqdm
 
 from xmin_core.settings import ORSSettings
@@ -20,9 +21,11 @@ def get_reachable_poi_cnt_categories(
     ors_settings: ORSSettings,
     hex_grids: gpd.GeoDataFrame,
     city_pois_cates_files: dict,
+    est_utm_crs: CRS,
     savedir: Path,
 )->dict[str, list]:
-    hex_grids_centroid = hex_grids.centroid
+    hex_grids_crs = hex_grids.crs
+    hex_grids_centroid = hex_grids.to_crs(est_utm_crs).centroid.to_crs(hex_grids_crs)
     hex_grids_centroid = list(zip(hex_grids_centroid.x, hex_grids_centroid.y))
 
     # for every category, calculate the durations from each hex grid to each poi
@@ -120,7 +123,6 @@ def get_duration_1mode_1cate(
     num_pois_cate = len(pois_cate_list)
     num_pois_batch = int(np.ceil(num_pois_cate / poi_batch_size))
 
-    pois_cate_mode_durations = []
     tasks = []
     for batch_idx in range(num_pois_batch):
         start_idx = batch_idx * poi_batch_size

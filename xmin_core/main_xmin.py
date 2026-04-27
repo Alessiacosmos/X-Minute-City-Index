@@ -54,10 +54,12 @@ def main_xmin(city_name: str, raster_s3_settings: RasterS3Settings, ors_settings
     city_pois_cates_files = get_city_pois_categories(buffered_city_polygon, est_utm_crs, pois_dir)
 
     # 2.2 assign population to hex grid. attr: Living
-    hex_grids = get_population_info_hex_grids(raster_s3_settings, hex_grids, aoi)
+    hex_grids = get_population_info_hex_grids(raster_s3_settings, hex_grids, city_polygon)
 
     # 2.3 get reachable poi counts for each categories, mode, and timeframe.
-    pois_cnt_cates_files = get_reachable_poi_cnt_categories(ors_settings, hex_grids, city_pois_cates_files, savedir)
+    pois_cnt_cates_files = get_reachable_poi_cnt_categories(
+        ors_settings, hex_grids, city_pois_cates_files, est_utm_crs, savedir
+    )
 
     # 2.4 get score
     get_xmin_index_score(hex_grids, pois_cnt_cates_files, savedir, is_normalize=True)
