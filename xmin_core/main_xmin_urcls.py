@@ -22,13 +22,13 @@ def main_xmin_urcls(config_descriptor: Path, workdir: Path):
 def parser_args():
     parser = argparse.ArgumentParser(description="XMin city composite index")
     parser.add_argument(
-        "--config-descriptor",
+        "--config",
         type=str,
         default="./configs/default.yaml",
         help="config file path",
     )
     parser.add_argument(
-        "--workdir",
+        "--output_dir",
         type=str,
         default="./experiments/urcls",
         help="work directory which saves GHSL settlement AOIs and will save all results.",
@@ -39,4 +39,4 @@ def parser_args():
 if __name__ == "__main__":
     args = parser_args()
 
-    main_xmin_urcls(Path(args.config_descriptor), Path(args.workdir))
+    main_xmin_urcls(Path(args.config), Path(args.output_dir))

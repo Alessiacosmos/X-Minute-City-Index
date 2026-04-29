@@ -16,7 +16,7 @@ def parser_args():
         help="City name you want to analyze.",
     )
     parser.add_argument(
-        "--config-descriptor",
+        "--config",
         type=str,
         required=True,
         help="config file path",
@@ -58,7 +58,7 @@ def main_xmin(
 if __name__ == "__main__":
     args = parser_args()
     city_name = args.city
-    config_descriptor = Path(args.config_descriptor)
+    config_descriptor = Path(args.config)
     print(f"Analyzing data for city: {city_name}")
 
     # initialize settings

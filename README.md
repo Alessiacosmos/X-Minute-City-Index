@@ -3,8 +3,8 @@
 Create your own accessibility analysis for your city and needs!
 Forked and improved based on https://github.com/MilenaLang/X-Minute-City-Index.
 
-This repository is used to calculate an x-minute city composite index for every GHSL settlement area.
-The goal of this project is to assess pedestrian acccessibility and walkability at different timeframes.
+This repository is used to calculate an x-minute city composite index for given city or AOI vector file.
+The goal of this project is to assess pedestrian accessibility and walkability at different timeframes.
 It can be used for urban planning purposes or individual assessment of cities.
 
 
@@ -21,32 +21,29 @@ Thus, this composite index includes the adaptable timeframe of the x-minute city
 The script uses open-source OpenStreetmap (OSM) Points of Interest (POIs) for amenities and WorldPop data for population density.
 POIs for healthcare, commerce, education and entertainment are fetched via [OSMnx](https://osmnx.readthedocs.io/en/stable/) and cleaned for routing.
 Small neighborhood units are represented as [h3](https://h3geo.org) hexagonal grid cells of approximately 1km x 1km and filtered to habited areas.
-Walking time matrices are generated using [openrouteservice (ORS)](https://openrouteservice.org/) with manual speed adjustments per population group.
+Walking time matrices are generated using [openrouteservice (ORS)](https://openrouteservice.org/) with manual speed adjustments for different mobility mode.
 
 The time matrices are calculated between POIs and each hexagon's center.
 The number of reachable POIs per category is scaled to 0-100 by using benchmarks (e.g. 5 healthcare facilities).
-The final index score is the sum of normalized scores across categories.
+The final index score is the population-weighted sum of normalized scores across categories.
 
-## Requirements
-See [requirments.txt](requirements.txt)
 
 ## Usage
-Usage of the script:
-### Option 1: using requirements.txt
-1. Install all software requirements if necessary
-2. Fork the repository
-3. Deploy ORS locally and activate its docker :right: see [ORS github repository](https://github.com/GIScience/openrouteservice)
-4. Deploy the worldpop data as postresql database & provide it at `.env` file (please copy `.env_template` and rename it as `.env`)
-5. Run the following command:
+The repository now is managed by uv. 
+
+1. Fork and clone the repository
+2. Init your uv, activate venv and do sync.
+2. Set `.env` file (please copy `.env_template` and rename it as `.env`) to access to HeiGIT population data bucket and ORS service. 
+3. Run the following command:
 ```shell
-# Run the script with your self-defined work directory (Don't forget moving `resources/urcls_4229_int_poly` into your directory).
-$ python -m xmin_core.main_xmin_urcls <--workdir >
-```
-### Option 2: using uv (recommended)
-1. Init your uv, activate venv and do sync.
-2. Run the following command:
-```shell
-$ uv run python xmin_core/main_xmin_urcls.py <--workdir >
+# Option 1: you want to do analysis for a city with given city name
+$ uv run python xmin_core/main_xmin.py --city Heidelberg --config configs/default.yaml
+
+# Option 2: you have a vector layer including a series of AOIs you want to analyse
+$ uv run xmin_core/cli.py --aoi_descriptor test/test_data/test_aoi_xmin.geojson  --config_descriptor configs/default.yaml --output_dir experiments/test_aoi/
+
+# Option 2.1 if you want to do analysis following ghsl settlement data, I prepared a spefical script for you
+$ uv run xmin_core/main_xmin_urcls.py --config configs/default.yaml --output_dir experiments/urcls/
 ```
 
 ## Author
