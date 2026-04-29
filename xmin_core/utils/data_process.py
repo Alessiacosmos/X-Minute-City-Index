@@ -21,39 +21,9 @@ log = logging.getLogger(__name__)
 def get_city_bboxes(city_name:str) -> tuple[gpd.GeoDataFrame, pd.DataFrame, CRS]:
     city_polygon = ox.geocode_to_gdf(city_name) # Get geometry for the place a geodataframe
     est_utm_crs = city_polygon.estimate_utm_crs()
-    # buffered_bounds, est_utm_crs = get_bboxes_mode_time(city_polygon)
 
     return city_polygon, est_utm_crs
 
-
-def get_bboxes_mode_time(city_polygon: gpd.GeoDataFrame) -> tuple[pd.DataFrame, CRS]:
-    # reproject to metric
-    estimated_crs= city_polygon.estimate_utm_crs()  # guess the UTM zone
-    city_polygon_projected = city_polygon.to_crs(estimated_crs)
-
-    # Get the bbox of the reprjected city
-    minx, miny, maxx, maxy = city_polygon_projected.total_bounds
-    bounding_box = box(minx, miny, maxx, maxy)
-
-    # get the buffered bounds for each mode and timeframe
-    buffered_bounds = []
-
-    pd_modetime = pd.DataFrame(BUFFER_DISTANCES)
-    pd_modetime['geometry'] = bounding_box
-    time_gpd = gpd.GeoDataFrame(pd_modetime, geometry='geometry', crs=estimated_crs)
-    time_gpd['timeframe'] = time_gpd.index
-    for mode, time_dict in BUFFER_DISTANCES.items():
-        # buffer each timeframe by the corresponding distance
-        buffered_bbox_mode = time_gpd.geometry.buffer(time_gpd[mode]).to_crs(epsg=4326).bounds # minx, miny, maxx, maxy
-        buffered_bbox_mode['mode'] = mode # minx, miny, maxx, maxy, mode
-        buffered_bbox_mode['timeframe'] = buffered_bbox_mode.index
-
-        buffered_bounds.append(buffered_bbox_mode)
-
-    buffered_bounds = pd.concat(buffered_bounds) # .set_index(['mode', 'timeframe'])
-    log.debug(f"bounds: {buffered_bounds}")
-
-    return buffered_bounds, estimated_crs
 
 
 def get_hex_grids(city_polygon: gpd.GeoDataFrame, hex_resolution: int) -> gpd.GeoDataFrame:
