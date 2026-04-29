@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 
 import geopandas as gpd
-import numpy as np
 import pandas as pd
 from omegaconf import DictConfig, ListConfig
 from rasterstats import gen_zonal_stats
@@ -61,9 +60,9 @@ def get_xmin_index_score(
     savedir.mkdir(exist_ok=True)
 
     # calculate living_normalized
-    hex_grids["living_normalized"] = np.minimum(
-        hex_grids["living"].values / category_benchmarks["living"] * 100, 100
-    )
+    population_weight = 1 / (
+        hex_grids["living"].values / 1000
+    )  # population weight: per thousand capita
 
     # re-organize pois_cnt based on their modes and times.
     pois_cnt_modes_times = {f"{m[:4]}_{t}": [] for m in modes for t in timeframes}
@@ -98,9 +97,9 @@ def get_xmin_index_score(
         hex_grids_w_pois = hex_grids.merge(pois_cnt_mode_time, on="hex_id", how="left")
 
         # get total score
-        hex_grids_w_pois["score"] = hex_grids_w_pois[normalized_columns].sum(
-            axis=1
-        ) / len(category_benchmarks)  # TODO: check why it's .mean in original code.
+        hex_grids_w_pois["score"] = (
+            population_weight * hex_grids_w_pois[normalized_columns].sum(axis=1)
+        ) / len(normalized_columns)  # TODO: check why it's .mean in original code.
 
         # save result
         savename = savedir / f"{key_mode_time}.gpkg"
