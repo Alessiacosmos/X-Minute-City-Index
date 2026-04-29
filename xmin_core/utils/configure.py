@@ -13,12 +13,14 @@ def initialize_configs(config_descriptor: Path):
 
     return configs
 
+
 def initialize_xmin_index_settings(configs):
     xmin_timeframes = configs.xmin_timeframes
     mode_speeds = configs.mode_speeds
 
     configs.buffer_distance = {
-        mode: {t: speed * t * 60 for t in xmin_timeframes} for mode, speed in mode_speeds.items()  # m
+        mode: {t: speed * t * 60 for t in xmin_timeframes}
+        for mode, speed in mode_speeds.items()  # m
     }
     configs.max_buffer_distance = max(mode_speeds.values()) * max(xmin_timeframes) * 60
 

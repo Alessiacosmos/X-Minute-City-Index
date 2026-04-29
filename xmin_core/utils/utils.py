@@ -13,35 +13,43 @@ def multipoly2pt(multipolys: gpd.GeoDataFrame):
     def multipoly2pt_onegeom(geom: MultiPolygon):
         largest_polygon = max(geom.geoms, key=lambda p: p.area)
         return largest_polygon.centroid
+
     return multipolys.apply(multipoly2pt_onegeom)
 
 
 def multiline2pt(multilines: gpd.GeoDataFrame):
     def multiline2pt_onegeom(geom: MultiLineString):
-        longest_line = max(geom.geoms, key=lambda l: l.length)
+        longest_line = max(geom.geoms, key=lambda line: line.length)
         midpt = longest_line.interpolate(0.5, normalized=True)
         return midpt
+
     return multilines.apply(multiline2pt_onegeom)
 
+
 geom2pt_operations = {
-    'LineString': lambda g: g.interpolate(0.5, normalized=True), # return Point
-    'Polygon': lambda g: g.centroid,
-    'MultiPolygon': multipoly2pt,
-    'MultiLineString': multiline2pt,
+    "LineString": lambda g: g.interpolate(0.5, normalized=True),  # return Point
+    "Polygon": lambda g: g.centroid,
+    "MultiPolygon": multipoly2pt,
+    "MultiLineString": multiline2pt,
 }
+
+
 def geometry_to_single_point(geom_gpd: gpd.GeoDataFrame, est_utm_crs: CRS):
-    geom_gpd['geometry'] = geom_gpd['geometry'].to_crs(crs=est_utm_crs)
+    geom_gpd["geometry"] = geom_gpd["geometry"].to_crs(crs=est_utm_crs)
     for geom_type in geom_gpd.geometry.type.unique():
-        if geom_type == 'Point': continue
+        if geom_type == "Point":
+            continue
         # Create a boolean mask for the current geometry type
         is_type = geom_gpd.geom_type == geom_type
 
         # Apply the operation_func (either vectorized or targeted apply)
         # only to the subset of rows matching the mask.
         operation_func = geom2pt_operations[geom_type]
-        geom_gpd.loc[is_type, 'geometry'] = operation_func(geom_gpd.loc[is_type, 'geometry'])
+        geom_gpd.loc[is_type, "geometry"] = operation_func(
+            geom_gpd.loc[is_type, "geometry"]
+        )
 
-    geom_gpd['geometry'] = geom_gpd['geometry'].to_crs(epsg=4326)
+    geom_gpd["geometry"] = geom_gpd["geometry"].to_crs(epsg=4326)
     return geom_gpd
 
 
@@ -52,7 +60,7 @@ def raster_to_gdf(data, transform, crs):
     """Convert raster array to GeoDataFrame of pixels"""
     mask = data >= 0
     geoms = [
-        {'properties': {'raster_val': v}, 'geometry': s}
+        {"properties": {"raster_val": v}, "geometry": s}
         for i, (s, v) in enumerate(shapes(data, mask=mask, transform=transform))
     ]
 
@@ -88,4 +96,6 @@ def normalize_score(value, benchmark, growth_rate=10):
     """
     if benchmark == 0:
         return 0
-    return np.minimum((1 - np.exp(-growth_rate/benchmark * value)) * 100, 100) # log_benchmark(value) * 100, capped at 100
+    return np.minimum(
+        (1 - np.exp(-growth_rate / benchmark * value)) * 100, 100
+    )  # log_benchmark(value) * 100, capped at 100

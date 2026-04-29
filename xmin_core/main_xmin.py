@@ -28,15 +28,17 @@ def main_xmin(
     city_name: str,
     config_descriptor: Path,
     raster_s3_settings: RasterS3Settings,
-    ors_settings: ORSSettings
+    ors_settings: ORSSettings,
 ):
-    savedir = Path(f'./experiments/{city_name}')
+    savedir = Path(f"./experiments/{city_name}")
 
     ##########
     # 1. get basic geometry and config
     ##########
     # 1.1 get buffered bounding boxes for each mode and timeframe
-    city_polygon, est_utm_crs = get_city_bboxes(city_name) # pd.DataFrame, columns: minx, miny, maxx, maxy, mode, timeframe
+    city_polygon, est_utm_crs = get_city_bboxes(
+        city_name
+    )  # pd.DataFrame, columns: minx, miny, maxx, maxy, mode, timeframe
 
     # 1.2 load config
     configs = initialize_configs(config_descriptor)
@@ -53,8 +55,6 @@ def main_xmin(
     )
 
 
-
-
 if __name__ == "__main__":
     args = parser_args()
     city_name = args.city
@@ -66,4 +66,3 @@ if __name__ == "__main__":
     ors_settings = ORSSettings()
 
     main_xmin(city_name, config_descriptor, raster_s3_settings, ors_settings)
-

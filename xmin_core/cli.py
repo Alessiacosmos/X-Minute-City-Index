@@ -27,27 +27,28 @@ def xmin_index(
     :return:
     """
     # initialize settings
-    logger.info(f'Initializing settings...')
+    logger.info("Initializing settings...")
     raster_s3_settings = RasterS3Settings()
     ors_settings = ORSSettings()
 
     # initialize configs
-    logger.info(f'Initializing configs from {config_descriptor}...')
+    logger.info(f"Initializing configs from {config_descriptor}...")
     configs = initialize_configs(config_descriptor)
-    logger.info(f'POI setting: {configs.poi_setting.__name__}')
+    logger.info(f"POI setting: {configs.poi_setting.__name__}")
 
     # run the index calculation
-    logger.info(f'Calculating x-min accessibility index...')
+    logger.info("Calculating x-min accessibility index...")
 
-    aois = gpd.read_file(aoi_descriptor).to_crs('EPSG:4326')
-    logger.info(f'{len(aois)} AOIs found')
+    aois = gpd.read_file(aoi_descriptor).to_crs("EPSG:4326")
+    logger.info(f"{len(aois)} AOIs found")
 
-
-    for idx in tqdm(range(len(aois)), desc='Processing AOIs'):
+    for idx in tqdm(range(len(aois)), desc="Processing AOIs"):
         aoi = aois.iloc[[idx]]
 
-        aoi_id = aoi.get('id', idx)  # Assuming there's an 'id' column, otherwise use the index
-        aoi_workdir = output_dir / f'aoi_{aoi_id}'
+        aoi_id = aoi.get(
+            "id", idx
+        )  # Assuming there's an 'id' column, otherwise use the index
+        aoi_workdir = output_dir / f"aoi_{aoi_id}"
         aoi_workdir.mkdir(parents=True, exist_ok=True)
 
         score_xmin_index_one_aoi(
@@ -58,11 +59,10 @@ def xmin_index(
             workdir=aoi_workdir,
         )
 
-    logger.info(f'xmin accessibility index calculation completed. Results saved to {output_dir}')
+    logger.info(
+        f"xmin accessibility index calculation completed. Results saved to {output_dir}"
+    )
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     auto_cli(xmin_index, as_positional=False)
-
-
