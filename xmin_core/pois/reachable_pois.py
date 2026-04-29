@@ -71,7 +71,7 @@ def get_reachable_pois_mode_time(
     speed_modes: dict,
     timeframes: list,
     savedir: Path,
-) -> list[str]:
+) -> list[Path]:
     modes = speed_modes.keys()
     timeframes_second = np.asarray(timeframes) * 60
 
@@ -128,7 +128,7 @@ def get_duration_1mode_1cate(
     name_cate: str,
     mode: str,
     ors_settings: ORSSettings,
-):
+) -> np.ndarray[float]:
     poi_batch_size = ors_settings.ors_duration_batch_size
 
     num_pois_cate = len(pois_cate_list)

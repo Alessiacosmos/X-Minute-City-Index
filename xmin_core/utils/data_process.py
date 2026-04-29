@@ -6,7 +6,6 @@ import geopandas as gpd
 import h3
 import numpy as np
 import osmnx as ox
-import pandas as pd
 import rasterio
 from pyproj import CRS
 from rasterio.mask import mask
@@ -17,7 +16,7 @@ from xmin_core.settings import RasterS3Settings
 log = logging.getLogger(__name__)
 
 
-def get_city_bboxes(city_name: str) -> tuple[gpd.GeoDataFrame, pd.DataFrame, CRS]:
+def get_city_bboxes(city_name: str) -> tuple[gpd.GeoDataFrame, CRS]:
     city_polygon = ox.geocode_to_gdf(
         city_name
     )  # Get geometry for the place a geodataframe

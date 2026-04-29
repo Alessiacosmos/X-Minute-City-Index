@@ -9,7 +9,7 @@ from shapely import MultiPolygon, MultiLineString
 ################
 # geometry to single point
 ################
-def multipoly2pt(multipolys: gpd.GeoDataFrame):
+def multipoly2pt(multipolys: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     def multipoly2pt_onegeom(geom: MultiPolygon):
         largest_polygon = max(geom.geoms, key=lambda p: p.area)
         return largest_polygon.centroid
@@ -17,7 +17,7 @@ def multipoly2pt(multipolys: gpd.GeoDataFrame):
     return multipolys.apply(multipoly2pt_onegeom)
 
 
-def multiline2pt(multilines: gpd.GeoDataFrame):
+def multiline2pt(multilines: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     def multiline2pt_onegeom(geom: MultiLineString):
         longest_line = max(geom.geoms, key=lambda line: line.length)
         midpt = longest_line.interpolate(0.5, normalized=True)
@@ -34,7 +34,9 @@ geom2pt_operations = {
 }
 
 
-def geometry_to_single_point(geom_gpd: gpd.GeoDataFrame, est_utm_crs: CRS):
+def geometry_to_single_point(
+    geom_gpd: gpd.GeoDataFrame, est_utm_crs: CRS
+) -> gpd.GeoDataFrame:
     geom_gpd["geometry"] = geom_gpd["geometry"].to_crs(crs=est_utm_crs)
     for geom_type in geom_gpd.geometry.type.unique():
         if geom_type == "Point":
@@ -56,7 +58,7 @@ def geometry_to_single_point(geom_gpd: gpd.GeoDataFrame, est_utm_crs: CRS):
 ################
 # raster image to gdf
 ################
-def raster_to_gdf(data, transform, crs):
+def raster_to_gdf(data, transform, crs) -> gpd.GeoDataFrame:
     """Convert raster array to GeoDataFrame of pixels"""
     mask = data >= 0
     geoms = [
@@ -71,7 +73,7 @@ def raster_to_gdf(data, transform, crs):
 ################
 # get hexogon within city boundary
 ################
-def area_ratio_within_city(hexagon, city_union):
+def area_ratio_within_city(hexagon, city_union) -> float:
     """
     calculates the intersection area ratio of each hexagon within the city boundariy
     :param hexagon: hexagon GeoDataframe
@@ -87,7 +89,7 @@ def area_ratio_within_city(hexagon, city_union):
 ################
 # normalize each categories' counts
 ################
-def normalize_score(value, benchmark, growth_rate=10):
+def normalize_score(value, benchmark, growth_rate=10) -> float:
     """
     normalize the value to a score between 0 and 100 based on the benchmark and growth rate.
     :param value: the value to be normalized

@@ -18,7 +18,7 @@ def get_city_pois_categories(
     poi_categories: POICatogories,
     est_utm_crs: CRS,
     savedir: Path,
-) -> dict:
+) -> dict[str, Path]:
     # get pois for each category,
     pois_cate_filenames = {}
     for category in tqdm(

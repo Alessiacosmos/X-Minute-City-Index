@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, DictConfig
 
 from xmin_core.poi_categories import category_settings
 
 
-def initialize_configs(config_descriptor: Path):
+def initialize_configs(config_descriptor: Path) -> DictConfig:
     configs = OmegaConf.load(config_descriptor)
     configs.poi_setting = category_settings[configs.poi_setting]
 
@@ -14,7 +14,7 @@ def initialize_configs(config_descriptor: Path):
     return configs
 
 
-def initialize_xmin_index_settings(configs):
+def initialize_xmin_index_settings(configs) -> DictConfig:
     xmin_timeframes = configs.xmin_timeframes
     mode_speeds = configs.mode_speeds
 
