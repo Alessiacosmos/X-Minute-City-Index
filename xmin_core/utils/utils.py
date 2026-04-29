@@ -1,63 +1,9 @@
 import geopandas as gpd
 
-from enum import Enum
-
 import numpy as np
 from pyproj import CRS
 from rasterio.features import shapes
 from shapely import MultiPolygon, MultiLineString
-
-#############################################################################################
-# basic setting
-#############################################################################################
-XMIN_Timeframse = [15, 20, 25, 30]
-
-MODE_SPEEDS = {
-    'foot-walking': 1.3889,       # m/s (5 km/h)
-    'cycling-regular': 4.1667     # m/s (15 km/h)
-}
-
-BUFFER_DISTANCES = {
-    mode: {t: speed * t * 60 for t in XMIN_Timeframse} for mode, speed in MODE_SPEEDS.items() # m
-}
-
-MAX_BUFFER_DISTANCE = max(MODE_SPEEDS.values()) * max(XMIN_Timeframse) * 60
-
-# Set the  H3 resolution (higher numbers means smaller hexagons)
-HEX_RESOLUTION = 8
-
-CATEGORY_BENCHMARKS = {
-    'commerce': 5,
-    'healthcare': 5,
-    'education': 5,
-    'entertainment': 20,
-    'living': 2000
-}
-
-
-class FacilitiesCategories(Enum):
-    commerce = {
-        'shop': ['supermarket', 'convenience', 'bakery', 'grocery'],
-        'amenity': ['marketplace', 'bank', 'post_box', 'atm', 'post_office']
-    }
-
-    healthcare = {
-        'amenity': ['pharmacy', 'doctors', 'dentist', 'hospital', 'clinic'],
-        'leisure': ['park', 'garden', 'fitness_centre', 'fitness_station', 'playground', 'sports_centre'],
-        'landuse': ['recreation_ground', 'forest'],
-        'club': ['sport'],
-    }
-
-    education = {
-        'amenity': ['kindergarten', 'childcare', 'school']
-    }
-
-    entertainment = {
-        'amenity': ['restaurant', 'fast_food', 'café', 'bar', 'pub', 'ice_cream', 'night_club', 'biergarten', 'library',
-                    'theatre', 'museum', 'cinema', 'arts_centre', 'community_centre', 'events_venue'],
-        'sport': ['swimming']
-    }
-
 
 
 ################

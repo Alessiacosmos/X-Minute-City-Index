@@ -13,7 +13,7 @@ from rasterio.mask import mask
 from shapely import Polygon, MultiPolygon, box
 
 from xmin_core.settings import RasterS3Settings
-from xmin_core.utils.utils import BUFFER_DISTANCES, HEX_RESOLUTION, area_ratio_within_city, raster_to_gdf
+from xmin_core.utils.utils import area_ratio_within_city, raster_to_gdf
 
 log = logging.getLogger(__name__)
 
@@ -56,13 +56,13 @@ def get_bboxes_mode_time(city_polygon: gpd.GeoDataFrame) -> tuple[pd.DataFrame, 
     return buffered_bounds, estimated_crs
 
 
-def get_hex_grids(city_polygon: gpd.GeoDataFrame, savedir:str='./tmp') -> gpd.GeoDataFrame:
+def get_hex_grids(city_polygon: gpd.GeoDataFrame, hex_resolution: int) -> gpd.GeoDataFrame:
     # use h3 to create hex_grids
     city_polygon_h3 = h3.geo_to_h3shape(city_polygon.union_all())
-    hexagons = h3.polygon_to_cells_experimental(city_polygon_h3, res=HEX_RESOLUTION, contain='center')
+    hexagons = h3.polygon_to_cells_experimental(city_polygon_h3, res=hex_resolution, contain='center')
 
     if len(hexagons) == 0:
-        warn(f"No hexagons generated for the city polygon at resolution {HEX_RESOLUTION}. Consider using a lower resolution.")
+        warn(f"No hexagons generated for the city polygon at resolution {hex_resolution}. Consider using a lower resolution.")
         return
 
     # Convert hexagons to GeoJSON features with hex_id

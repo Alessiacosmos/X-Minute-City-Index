@@ -43,9 +43,9 @@ class ORSSettings(BaseSettings):
     ors_base_url: str | None = None
     ors_api_key: str | None = None
 
-    ors_duration_batch_size: int = 50
-    ors_duration_pool_number: int = 20
-    ors_duration_rate_limit: int = 100
+    ors_duration_batch_size: int = 500
+    ors_duration_pool_number: int = 5
+    ors_duration_rate_limit: int = 40
 
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')  # dead: disable
 
@@ -72,9 +72,7 @@ class ORSSettings(BaseSettings):
     @cached_property
     def _session_db_path(self) -> str:
         """Creates a temp file path and registers it for deletion on exit."""
-        # Create a temp file but close it immediately so the path is free
-        fd, path = tempfile.mkstemp(suffix=".sqlite", prefix='ors_session_')
-        os.close(fd)
+        path = "./resources/ors_rate_limit_shared.sqlite"
 
         # Register the cleanup function to run when the script ends
         atexit.register(self._cleanup_temp_db, path)

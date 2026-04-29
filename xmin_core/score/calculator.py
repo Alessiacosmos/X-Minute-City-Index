@@ -6,6 +6,7 @@ import geopandas as gpd
 import numpy as np
 import osmnx as ox
 import pandas as pd
+from omegaconf import DictConfig, ListConfig
 from pyproj import CRS
 from rasterstats import gen_zonal_stats
 from shapely import box, Polygon
@@ -14,29 +15,10 @@ from tqdm import tqdm
 from xmin_core.settings import RasterS3Settings
 from xmin_core.utils.data_process import get_population_from_raster_data
 from xmin_core.utils.utils import (
-    FacilitiesCategories, XMIN_Timeframse, geometry_to_single_point, MODE_SPEEDS, normalize_score, CATEGORY_BENCHMARKS,
+    geometry_to_single_point, normalize_score,
 )
 
 log = logging.getLogger(__name__)
-
-def get_city_pois_categories(buffered_polygon: Polygon, est_utm_crs: CRS, savedir:Path) -> dict:
-    # get pois for each category,
-    pois_cate_filenames = {}
-    for category in tqdm(FacilitiesCategories, total=len(FacilitiesCategories), desc='Getting POIs per category'):
-        log.info(f'Getting pois modes for {category.name}')
-        tags = category.value  # dict
-        most_pois_cate = ox.features.features_from_polygon(buffered_polygon, tags=tags)
-
-        # convert multiple geometries to single point
-        most_pois_cate = geometry_to_single_point(most_pois_cate, est_utm_crs)
-
-        savename = savedir / f"pois_pts_{category.name}.gpkg"
-        most_pois_cate.to_file(savename, driver='GPKG')
-        pois_cate_filenames[category.name] = savename
-
-
-    return pois_cate_filenames
-
 
 
 def get_population_info_hex_grids(
@@ -73,19 +55,22 @@ def get_population_info_hex_grids(
 def get_xmin_index_score(
     hex_grids: gpd.GeoDataFrame,
     pois_cnt_cates_files:dict,
-    savedir:str,
+    mode_speeds: dict | DictConfig,
+    timeframes: list | ListConfig,
+    category_benchmarks: dict,
+    savedir:Path,
     is_normalize:bool = True,
 ):
-    modes = MODE_SPEEDS.keys()
+    modes = mode_speeds.keys()
 
-    savedir = os.path.join(savedir, 'index_score')
-    os.makedirs(savedir, exist_ok=True)
+    savedir = savedir / 'index_score'
+    savedir.mkdir(exist_ok=True)
 
     # calculate living_normalized
-    hex_grids['living_normalized'] = np.minimum(hex_grids['living'].values / CATEGORY_BENCHMARKS['living'] * 100, 100)
+    hex_grids['living_normalized'] = np.minimum(hex_grids['living'].values / category_benchmarks['living'] * 100, 100)
 
     # re-organize pois_cnt based on their modes and times.
-    pois_cnt_modes_times = {f'{m[:4]}_{t}': [] for m in modes for t in XMIN_Timeframse }
+    pois_cnt_modes_times = {f'{m[:4]}_{t}': [] for m in modes for t in timeframes }
     for name_cate, pois_cnt_cate_files in pois_cnt_cates_files.items():
         for pois_cnt_cate_mode_time_file in pois_cnt_cate_files:
             # get current category's mode and timeframe key.
@@ -99,7 +84,7 @@ def get_xmin_index_score(
             if is_normalize:
                 pois_cnt_cate_mode_time[f'{name_cate}_normalized'] = normalize_score(
                     pois_cnt_cate_mode_time[name_cate].values,
-                    CATEGORY_BENCHMARKS[name_cate],
+                    category_benchmarks[name_cate],
                 )
 
             # add one category_mode_time situation's pois_cnt to corresponding list
@@ -108,15 +93,15 @@ def get_xmin_index_score(
 
 
     # get score results: filenum = num_modes (e.g. cycle, foot) * num_timeframes (e.g. 15,20,25)
-    normalized_columns = [f'{category}_normalized' for category in CATEGORY_BENCHMARKS.keys()]
+    normalized_columns = [f'{category}_normalized' for category in pois_cnt_cates_files.keys()]
     for key_mode_time, pois_cnt_mode_time in pois_cnt_modes_times.items():
         pois_cnt_mode_time = pd.concat(pois_cnt_mode_time, axis=1)
         hex_grids_w_pois = hex_grids.merge(pois_cnt_mode_time, on='hex_id', how='left')
 
         # get total score
-        hex_grids_w_pois['score'] = hex_grids_w_pois[normalized_columns].sum(axis=1) / len(CATEGORY_BENCHMARKS)# TODO: check why it's .mean in original code.
+        hex_grids_w_pois['score'] = hex_grids_w_pois[normalized_columns].sum(axis=1) / len(category_benchmarks)# TODO: check why it's .mean in original code.
 
         # save result
-        savename = os.path.join(savedir, f'{key_mode_time}.gpkg')
+        savename = savedir / f'{key_mode_time}.gpkg'
         hex_grids_w_pois.to_file(savename, driver='GPKG')
 

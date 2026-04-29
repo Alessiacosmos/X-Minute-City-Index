@@ -1,7 +1,8 @@
 import logging
 import os
+import time
 from functools import partial
-from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 
 import geopandas as gpd
@@ -12,7 +13,6 @@ from pyproj import CRS
 from tqdm import tqdm
 
 from xmin_core.settings import ORSSettings
-from xmin_core.utils.utils import MODE_SPEEDS, XMIN_Timeframse
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +22,8 @@ def get_reachable_poi_cnt_categories(
     hex_grids: gpd.GeoDataFrame,
     city_pois_cates_files: dict,
     est_utm_crs: CRS,
+    speed_modes: dict,
+    timeframes: list,
     savedir: Path,
 )->dict[str, list]:
     hex_grids_crs = hex_grids.crs
@@ -39,16 +41,24 @@ def get_reachable_poi_cnt_categories(
         pois_cate_list = list(zip(pois_cate.geometry.x, pois_cate.geometry.y))
 
         # get one category's duration info. for different modes
-        pois_cate_modes_durations = get_duration_modes_1cate(hex_grids_centroid, pois_cate_list, name_cate, ors_settings)
+        pois_cate_modes_durations = get_duration_modes_1cate(
+            hex_grids_centroid=hex_grids_centroid,
+            pois_cate_list=pois_cate_list,
+            name_cate=name_cate,
+            speed_modes=speed_modes,
+            ors_settings=ors_settings
+        )
 
         # get the count of reachable points at different mode and timeframe, and save them
         # save to path: <savedir>/<name_cate>/<mode>__pois_cnt_<timeframe>.csv
         # includes hex_id and poi_cnt info.
         pois_cnt_cate_files = get_reachable_pois_mode_time(
-            pois_cate_modes_durations,
-            hex_grids['hex_id'].values,
-            name_cate,
-            savedir,
+            pois_cate_modes_durations=pois_cate_modes_durations,
+            hex_ids=hex_grids['hex_id'].values,
+            name_cate=name_cate,
+            speed_modes=speed_modes,
+            timeframes=timeframes,
+            savedir=savedir,
         )
 
         pois_cnt_cates_files[name_cate] = pois_cnt_cate_files
@@ -60,10 +70,12 @@ def get_reachable_pois_mode_time(
     pois_cate_modes_durations: dict[str, np.ndarray[float]],
     hex_ids: np.ndarray,
     name_cate:str,
+    speed_modes: dict,
+    timeframes: list,
     savedir: Path,
 )->list[str]:
-    modes = MODE_SPEEDS.keys()
-    timeframes_second = np.asarray(XMIN_Timeframse) * 60
+    modes = speed_modes.keys()
+    timeframes_second = np.asarray(timeframes) * 60
 
     savedir = savedir / name_cate
     savedir.mkdir(parents=True, exist_ok=True)
@@ -90,13 +102,12 @@ def get_duration_modes_1cate(
     hex_grids_centroid: list,
     pois_cate_list: list,
     name_cate: str,
+    speed_modes: dict,
     ors_settings: ORSSettings,
 ) -> dict[str, np.ndarray[float]]:
-    modes = MODE_SPEEDS.keys()
-
     # for different mode we will get different times
     pois_cate_modes_durations = {}
-    for mode in modes:
+    for mode in speed_modes:
         # calculate durations between every hex grid center to every pois in one category
         pois_cate_mode_durations = get_duration_1mode_1cate(
             hex_grids_centroid,
@@ -136,7 +147,7 @@ def get_duration_1mode_1cate(
         mode=mode,
         ors_settings=ors_settings,
     )
-    with Pool(ors_settings.ors_duration_pool_number) as pool:
+    with ThreadPool(ors_settings.ors_duration_pool_number) as pool:
         results = list(
             tqdm(
                 pool.starmap(_get_duration_batch_partial, tasks),
@@ -204,5 +215,8 @@ def get_duration_batch(
 
     # Extract relevant part of the duration matrix (centers to batch points)
     durations = np.asarray(durations) # [num_batch_coords:, :] # shape = [len(center_coords), len(batch_coords)]
+
+    # sleep a while to avoid over quota limitation
+    time.sleep(60 / ors_settings.ors_duration_rate_limit)
 
     return batch_idx, durations
