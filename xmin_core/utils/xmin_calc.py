@@ -1,5 +1,7 @@
 import os
 import logging
+from pathlib import Path
+
 import geopandas as gpd
 import numpy as np
 import osmnx as ox
@@ -7,6 +9,7 @@ import pandas as pd
 from pyproj import CRS
 from rasterstats import gen_zonal_stats
 from shapely import box, Polygon
+from tqdm import tqdm
 
 from xmin_core.settings import RasterS3Settings
 from xmin_core.utils.data_process import get_population_from_raster_data
@@ -16,19 +19,18 @@ from xmin_core.utils.utils import (
 
 log = logging.getLogger(__name__)
 
-def get_city_pois_categories(buffered_polygon: Polygon, est_utm_crs: CRS, savedir:str='./tmp') -> dict:
+def get_city_pois_categories(buffered_polygon: Polygon, est_utm_crs: CRS, savedir:Path) -> dict:
     # get pois for each category,
     pois_cate_filenames = {}
-    for category in FacilitiesCategories:
+    for category in tqdm(FacilitiesCategories, total=len(FacilitiesCategories), desc='Getting POIs per category'):
         log.info(f'Getting pois modes for {category.name}')
         tags = category.value  # dict
         most_pois_cate = ox.features.features_from_polygon(buffered_polygon, tags=tags)
-        most_pois_cate = most_pois_cate[['geometry']]
 
         # convert multiple geometries to single point
         most_pois_cate = geometry_to_single_point(most_pois_cate, est_utm_crs)
 
-        savename = os.path.join(savedir, f"most_pois_pts_{category.name}.gpkg")
+        savename = savedir / f"pois_pts_{category.name}.gpkg"
         most_pois_cate.to_file(savename, driver='GPKG')
         pois_cate_filenames[category.name] = savename
 

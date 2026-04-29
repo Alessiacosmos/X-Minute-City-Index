@@ -26,11 +26,6 @@ MAX_BUFFER_DISTANCE = max(MODE_SPEEDS.values()) * max(XMIN_Timeframse) * 60
 # Set the  H3 resolution (higher numbers means smaller hexagons)
 HEX_RESOLUTION = 8
 
-# batchsize when calculating durations
-POI_BATCH_SIZE = 50 # 10
-# pool number for multiprocessing speed-up
-NUM_POOL = 10
-
 CATEGORY_BENCHMARKS = {
     'commerce': 5,
     'healthcare': 5,

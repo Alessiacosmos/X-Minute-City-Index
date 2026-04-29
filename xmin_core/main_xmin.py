@@ -1,7 +1,9 @@
 import argparse
+from pathlib import Path
+
 import geopandas as gpd
 
-from xmin_core.settings import RasterS3Settings
+from xmin_core.settings import RasterS3Settings, ORSSettings
 from xmin_core.utils.data_process import get_city_bboxes, get_hex_grids
 from xmin_core.utils.reachable_pois import get_reachable_poi_cnt_categories
 from xmin_core.utils.utils import MAX_BUFFER_DISTANCE
@@ -23,8 +25,8 @@ def parser_args():
     return parser.parse_args()
 
 
-def main_xmin(city_name: str, raster_s3_settings: RasterS3Settings):
-    savedir = './resources'
+def main_xmin(city_name: str, raster_s3_settings: RasterS3Settings, ors_settings: ORSSettings):
+    savedir = Path('./experiments')
     ##########
     # 1. get basic geometry data: bboxes for each mode and timeframe; hex_grids
     ##########
@@ -33,6 +35,8 @@ def main_xmin(city_name: str, raster_s3_settings: RasterS3Settings):
 
     # 1.2 generate hex grids for each mode and timeframe
     hex_grids = get_hex_grids(city_polygon)
+    if hex_grids is None:
+        return
 
     ##########
     # 2. map population and poi information to hex grids
@@ -45,48 +49,20 @@ def main_xmin(city_name: str, raster_s3_settings: RasterS3Settings):
         .to_crs(4326)
         .geometry.iloc[0]
     )
-    city_pois_cates_files = get_city_pois_categories(buffered_city_polygon, est_utm_crs, savedir)
+    pois_dir = savedir / 'pois'
+    pois_dir.mkdir(parents=True, exist_ok=True)
+    city_pois_cates_files = get_city_pois_categories(buffered_city_polygon, est_utm_crs, pois_dir)
 
     # 2.2 assign population to hex grid. attr: Living
     hex_grids = get_population_info_hex_grids(raster_s3_settings, hex_grids, city_polygon)
 
     # 2.3 get reachable poi counts for each categories, mode, and timeframe.
-    # city_pois_cates_files = {'commerce': '../resources/most_pois_pts_commerce.gpkg',
-    #                          'healthcare': '../resources/most_pois_pts_healthcare.gpkg',
-    #                          'education': '../resources/most_pois_pts_education.gpkg',
-    #                          'entertainment': '../resources/most_pois_pts_entertainment.gpkg'}
-    pois_cnt_cates_files = get_reachable_poi_cnt_categories(hex_grids, city_pois_cates_files, savedir)
+    pois_cnt_cates_files = get_reachable_poi_cnt_categories(
+        ors_settings, hex_grids, city_pois_cates_files, est_utm_crs, savedir
+    )
 
     # 2.4 get score
-    # ###################### simulated info. #############
-    # city_pois_cates_files = {'commerce': '../resources/most_pois_pts_commerce.gpkg',
-    #  'healthcare': '../resources/most_pois_pts_healthcare.gpkg',
-    #  'education': '../resources/most_pois_pts_education.gpkg',
-    #  'entertainment': '../resources/most_pois_pts_entertainment.gpkg'}
-    # pois_cnt_cates_files = {'commerce': ['../resources/commerce/foot-walking_pois_cnt_15.csv',
-    #               '../resources/commerce/foot-walking_pois_cnt_20.csv',
-    #               '../resources/commerce/foot-walking_pois_cnt_25.csv',
-    #               '../resources/commerce/foot-walking_pois_cnt_30.csv',
-    #               '../resources/commerce/cycling-regular_pois_cnt_15.csv',
-    #               '../resources/commerce/cycling-regular_pois_cnt_20.csv',
-    #               '../resources/commerce/cycling-regular_pois_cnt_25.csv',
-    #               '../resources/commerce/cycling-regular_pois_cnt_30.csv'],
-    #  'healthcare': ['../resources/healthcare/foot-walking_pois_cnt_15.csv',
-    #                 '../resources/healthcare/foot-walking_pois_cnt_20.csv',
-    #                 '../resources/healthcare/foot-walking_pois_cnt_25.csv',
-    #                 '../resources/healthcare/foot-walking_pois_cnt_30.csv',
-    #                 '../resources/healthcare/cycling-regular_pois_cnt_15.csv',
-    #                 '../resources/healthcare/cycling-regular_pois_cnt_20.csv',
-    #                 '../resources/healthcare/cycling-regular_pois_cnt_25.csv',
-    #                 '../resources/healthcare/cycling-regular_pois_cnt_30.csv']}
-    # hex_grids['living'] = 0
-    # ###################### simulated info. #############
     get_xmin_index_score(hex_grids, pois_cnt_cates_files, savedir, is_normalize=True)
-
-
-
-
-
 
 
 
@@ -97,6 +73,7 @@ if __name__ == "__main__":
 
     # initialize settings
     raster_s3_settings = RasterS3Settings()
+    ors_settings = ORSSettings()
 
-    main_xmin(city_name, raster_s3_settings)
+    main_xmin(city_name, raster_s3_settings, ors_settings)
 

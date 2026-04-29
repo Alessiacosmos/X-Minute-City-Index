@@ -1,5 +1,6 @@
 import logging
 from typing import Any
+from warnings import warn
 
 import geopandas as gpd
 import h3
@@ -60,6 +61,10 @@ def get_hex_grids(city_polygon: gpd.GeoDataFrame, savedir:str='./tmp') -> gpd.Ge
     city_polygon_h3 = h3.geo_to_h3shape(city_polygon.union_all())
     hexagons = h3.polygon_to_cells_experimental(city_polygon_h3, res=HEX_RESOLUTION, contain='center')
 
+    if len(hexagons) == 0:
+        warn(f"No hexagons generated for the city polygon at resolution {HEX_RESOLUTION}. Consider using a lower resolution.")
+        return
+
     # Convert hexagons to GeoJSON features with hex_id
     hexagon_features = [
         {
@@ -74,9 +79,7 @@ def get_hex_grids(city_polygon: gpd.GeoDataFrame, savedir:str='./tmp') -> gpd.Ge
     ]
 
     # Create a GeoDataFrame from the features
-    hexagons_gdf = gpd.GeoDataFrame.from_features(hexagon_features, crs=4326)
-
-    return hexagons_gdf
+    return gpd.GeoDataFrame.from_features(hexagon_features, crs=4326)
 
 
 

@@ -2,24 +2,30 @@ import logging
 import os
 from functools import partial
 from multiprocessing import Pool
+from pathlib import Path
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import requests
+from pyproj import CRS
 from tqdm import tqdm
 
-from xmin_core.utils.utils import POI_BATCH_SIZE, MODE_SPEEDS, XMIN_Timeframse, NUM_POOL
+from xmin_core.settings import ORSSettings
+from xmin_core.utils.utils import MODE_SPEEDS, XMIN_Timeframse
 
 log = logging.getLogger(__name__)
 
 
 def get_reachable_poi_cnt_categories(
+    ors_settings: ORSSettings,
     hex_grids: gpd.GeoDataFrame,
     city_pois_cates_files: dict,
-    savedir:str,
+    est_utm_crs: CRS,
+    savedir: Path,
 )->dict[str, list]:
-    hex_grids_centroid = hex_grids.centroid
+    hex_grids_crs = hex_grids.crs
+    hex_grids_centroid = hex_grids.to_crs(est_utm_crs).centroid.to_crs(hex_grids_crs)
     hex_grids_centroid = list(zip(hex_grids_centroid.x, hex_grids_centroid.y))
 
     # for every category, calculate the durations from each hex grid to each poi
@@ -33,8 +39,7 @@ def get_reachable_poi_cnt_categories(
         pois_cate_list = list(zip(pois_cate.geometry.x, pois_cate.geometry.y))
 
         # get one category's duration info. for different modes
-
-        pois_cate_modes_durations = get_duration_modes_1cate(hex_grids_centroid, pois_cate_list, name_cate)
+        pois_cate_modes_durations = get_duration_modes_1cate(hex_grids_centroid, pois_cate_list, name_cate, ors_settings)
 
         # get the count of reachable points at different mode and timeframe, and save them
         # save to path: <savedir>/<name_cate>/<mode>__pois_cnt_<timeframe>.csv
@@ -55,24 +60,25 @@ def get_reachable_pois_mode_time(
     pois_cate_modes_durations: dict[str, np.ndarray[float]],
     hex_ids: np.ndarray,
     name_cate:str,
-    savedir:str,
+    savedir: Path,
 )->list[str]:
     modes = MODE_SPEEDS.keys()
     timeframes_second = np.asarray(XMIN_Timeframse) * 60
 
-    savedir = os.path.join(savedir, name_cate)
-    os.makedirs(savedir, exist_ok=True)
+    savedir = savedir / name_cate
+    savedir.mkdir(parents=True, exist_ok=True)
 
     # calculate the poi cnt at each mode and each timeframe, then save it to local files.
     savenames = []
     for mode in modes:
         for timeframe_s in timeframes_second:
+            # todo: update here to adapt to sub categories
             hex_grids_reachable_poi_cnt_mode = np.sum(pois_cate_modes_durations[mode]<=timeframe_s, axis=1)
             hex_grids_reachable_poi_cnt_mode = pd.DataFrame(
                 np.column_stack([hex_ids, hex_grids_reachable_poi_cnt_mode]),
                 columns = ['hex_id', name_cate]
             )
-            savename = os.path.join(savedir, f'{mode}_pois_cnt_{timeframe_s//60}.csv')
+            savename = savedir / f'{mode}_pois_cnt_{timeframe_s//60}.csv'
             hex_grids_reachable_poi_cnt_mode.to_csv(savename, index=False)
 
             savenames.append(savename)
@@ -84,6 +90,7 @@ def get_duration_modes_1cate(
     hex_grids_centroid: list,
     pois_cate_list: list,
     name_cate: str,
+    ors_settings: ORSSettings,
 ) -> dict[str, np.ndarray[float]]:
     modes = MODE_SPEEDS.keys()
 
@@ -91,33 +98,35 @@ def get_duration_modes_1cate(
     pois_cate_modes_durations = {}
     for mode in modes:
         # calculate durations between every hex grid center to every pois in one category
-
         pois_cate_mode_durations = get_duration_1mode_1cate(
             hex_grids_centroid,
             pois_cate_list,
             name_cate,
             mode,
+            ors_settings,
         )
-
 
         pois_cate_modes_durations[mode] = pois_cate_mode_durations
 
     return pois_cate_modes_durations
+
 
 def get_duration_1mode_1cate(
     hex_grids_centroid: list,
     pois_cate_list: list,
     name_cate: str,
     mode: str,
+    ors_settings: ORSSettings,
 ):
-    num_pois_cate = len(pois_cate_list)
-    num_pois_batch = int(np.ceil(num_pois_cate / POI_BATCH_SIZE))
+    poi_batch_size = ors_settings.ors_duration_batch_size
 
-    pois_cate_mode_durations = []
+    num_pois_cate = len(pois_cate_list)
+    num_pois_batch = int(np.ceil(num_pois_cate / poi_batch_size))
+
     tasks = []
     for batch_idx in range(num_pois_batch):
-        start_idx = batch_idx * POI_BATCH_SIZE
-        end_idx = min(start_idx + POI_BATCH_SIZE, num_pois_cate)
+        start_idx = batch_idx * poi_batch_size
+        end_idx = min(start_idx + poi_batch_size, num_pois_cate)
         tasks.append((batch_idx, start_idx, end_idx))
 
     _get_duration_batch_partial = partial(
@@ -125,8 +134,9 @@ def get_duration_1mode_1cate(
         center_coords=hex_grids_centroid,
         category_coords=pois_cate_list,
         mode=mode,
+        ors_settings=ors_settings,
     )
-    with Pool(NUM_POOL) as pool:
+    with Pool(ors_settings.ors_duration_pool_number) as pool:
         results = list(
             tqdm(
                 pool.starmap(_get_duration_batch_partial, tasks),
@@ -154,6 +164,7 @@ def get_duration_batch(
     center_coords: list,
     category_coords: list,
     mode: str,
+    ors_settings: ORSSettings,
 ) -> tuple[int, np.ndarray]:
     """
     Processes a batch of POIs to calculate travel time matrices
@@ -164,6 +175,7 @@ def get_duration_batch(
     :param mode: foot-walking or cycling-regular
     :returns: Relevant travel durations and indices of reachable POIs within the time limit
     """
+    log.debug(f"[batch {batch_idx}] Calculate duration time with POIs from index {start_idx} to {end_idx} for mode {mode}")
 
     # Select the batch of category points
     batch_coords = category_coords[start_idx:end_idx]
@@ -177,17 +189,13 @@ def get_duration_batch(
         "metrics": ["duration"],
     }
 
-    headers = {
-        'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
-        'Authorization': 'YOUR_API_KEY',
-        'Content-Type': 'application/json; charset=utf-8'
-    }
-
-    # Construct the URL dynamically using the mot variable
-    url = f'http://localhost:8082/ors/v2/matrix/{mode}'
-
     # Send the POST request to the ORS API with the dynamic URL
-    response = requests.post(url, json=body, headers=headers)
+    response = ors_settings.client_request_session.post(
+        f'{ors_settings.client._base_url}/v2/matrix/{mode}',
+        json=body,
+        headers=ors_settings.client_headers
+    )
+    response.raise_for_status()
     data = response.json()
     # print(data)
 
