@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import geopandas as gpd
+from ohsome import OhsomeClient
 from omegaconf import DictConfig
 
 from xmin_core.pois.collect import get_city_pois_categories
@@ -18,6 +19,7 @@ def score_xmin_index_one_aoi(
     configs: DictConfig,
     raster_s3_settings: RasterS3Settings,
     ors_settings: ORSSettings,
+    ohsome_client: OhsomeClient,
     workdir: Path,
 ):
     poi_setting = configs.poi_setting
@@ -48,7 +50,7 @@ def score_xmin_index_one_aoi(
     pois_dir = workdir / "pois"
     pois_dir.mkdir(parents=True, exist_ok=True)
     city_pois_cates_files = get_city_pois_categories(
-        buffered_aoi, poi_setting, est_utm_crs, pois_dir
+        ohsome_client, buffered_aoi, poi_setting, est_utm_crs, pois_dir
     )
 
     # 2.2 assign population to hex grid. attr: Living

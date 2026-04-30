@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 import geopandas as gpd
+import ohsome
 from jsonargparse import auto_cli
 from tqdm import tqdm
 
@@ -30,6 +31,7 @@ def xmin_index(
     logger.info("Initializing settings...")
     raster_s3_settings = RasterS3Settings()
     ors_settings = ORSSettings()
+    ohsome_client = ohsome.OhsomeClient(user_agent='CA Research Xmin-city Accessibility')
 
     # initialize configs
     logger.info(f"Initializing configs from {config_descriptor}...")
@@ -56,6 +58,7 @@ def xmin_index(
             configs=configs,
             raster_s3_settings=raster_s3_settings,
             ors_settings=ors_settings,
+            ohsome_client=ohsome_client,
             workdir=aoi_workdir,
         )
 
