@@ -271,6 +271,15 @@ wheels = [
 ]
 
 [[package]]
+name = "curlify2"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/91/24/3803baab3519ee855b6f6f6a81dca7af1ff8640bccb177765a227df9f835/curlify2-2.0.0.tar.gz", hash = "sha256:6c3a98dc8603b76da990f58754b18ec4e9bfe5b881fc52d33ddf9d9096568809", size = 2537, upload-time = "2023-06-09T15:17:32.329Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/43/db/8428ec3fa111a69db05de651ac7378b3b3eb8b558dd1cd7d262f4904c200/curlify2-2.0.0-py3-none-any.whl", hash = "sha256:23878b13fa33ed92ae5dff0476e5b881b39fc79a5fcb37e6726f96239a136474", size = 3085, upload-time = "2023-06-09T15:17:30.459Z" },
+]
+
+[[package]]
 name = "cycler"
 version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
@@ -890,6 +899,23 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/51/41/851c4b4082402d9ea860c3626db5d5df47164a712cb23b54be028b184c1c/numpy-2.3.5-cp314-cp314t-win32.whl", hash = "sha256:93eebbcf1aafdf7e2ddd44c2923e2672e1010bddc014138b229e49725b4d6be5", size = 6479806, upload-time = "2025-11-16T22:52:14.641Z" },
     { url = "https://files.pythonhosted.org/packages/90/30/d48bde1dfd93332fa557cff1972fbc039e055a52021fbef4c2c4b1eefd17/numpy-2.3.5-cp314-cp314t-win_amd64.whl", hash = "sha256:c8a9958e88b65c3b27e22ca2a076311636850b612d6bbfb76e8d156aacde2aaf", size = 13105760, upload-time = "2025-11-16T22:52:17.975Z" },
     { url = "https://files.pythonhosted.org/packages/2d/fd/4b5eb0b3e888d86aee4d198c23acec7d214baaf17ea93c1adec94c9518b9/numpy-2.3.5-cp314-cp314t-win_arm64.whl", hash = "sha256:6203fdf9f3dc5bdaed7319ad8698e685c7a3be10819f41d32a0723e611733b42", size = 10545459, upload-time = "2025-11-16T22:52:20.55Z" },
+]
+
+[[package]]
+name = "ohsome"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "curlify2" },
+    { name = "geopandas" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "requests" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7f/47/d0ab6754e1b085ca0208f7df07e07d7cf82a561e5dd27bc273709b99440f/ohsome-0.4.0.tar.gz", hash = "sha256:fb32448fffd85e43b93a747a3906d0b23b460751fcb0fa430bd3bf4579b5f7b5", size = 66047, upload-time = "2024-10-25T12:50:05.484Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/17/6a/9cdf59682435a9960b072b3726c1653dd4ce5364a99b698c531498fa410e/ohsome-0.4.0-py3-none-any.whl", hash = "sha256:6da97e515ed39798a57af8b3de608a43ad3700c4fc06bc73ae7efc18464afbf0", size = 106446, upload-time = "2024-10-25T12:50:04.137Z" },
 ]
 
 [[package]]
@@ -1867,6 +1893,7 @@ dependencies = [
     { name = "jsonargparse" },
     { name = "matplotlib" },
     { name = "numpy" },
+    { name = "ohsome" },
     { name = "omegaconf" },
     { name = "openrouteservice" },
     { name = "osmnx" },
@@ -1904,6 +1931,7 @@ requires-dist = [
     { name = "jsonargparse", specifier = ">=4.48.0" },
     { name = "matplotlib", specifier = "~=3.10.7" },
     { name = "numpy", specifier = "~=2.3.5" },
+    { name = "ohsome", specifier = ">=0.4.0" },
     { name = "omegaconf", specifier = ">=2.3.0" },
     { name = "openrouteservice", specifier = ">=2.3.3" },
     { name = "osmnx", specifier = "~=2.0.6" },

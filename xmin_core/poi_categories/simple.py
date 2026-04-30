@@ -10,47 +10,26 @@ CATEGORY_BENCHMARKS = {
 
 
 class SimpleFacilitiesCategories(POICatogories):
-    commerce = {
-        "shop": ["supermarket", "convenience", "bakery", "grocery"],
-        "amenity": ["marketplace", "bank", "post_box", "atm", "post_office"],
-    }
+    commerce = (
+        'shop in (supermarket, convenience, bakery, grocery) or '
+        'amenity in (marketplace, bank, post_box, atm, post_office)'
+    )
 
-    healthcare = {
-        "amenity": ["pharmacy", "doctors", "dentist", "hospital", "clinic"],
-        "leisure": [
-            "park",
-            "garden",
-            "fitness_centre",
-            "fitness_station",
-            "playground",
-            "sports_centre",
-        ],
-        "landuse": ["recreation_ground", "forest"],
-        "club": ["sport"],
-    }
+    healthcare = (
+        'amenity in (pharmacy, doctors, dentist, hospital, clinic) or '
+        'leisure in (park, garden, fitness_centre, fitness_station, playground, sports_centre) or '
+        'landuse in (recreation_ground, forest) or '
+        'club=sport'
+    )
 
-    education = {"amenity": ["kindergarten", "childcare", "school"]}
+    education = 'amenity in (kindergarten, childcare, school)'
 
-    entertainment = {
-        "amenity": [
-            "restaurant",
-            "fast_food",
-            "café",
-            "bar",
-            "pub",
-            "ice_cream",
-            "night_club",
-            "biergarten",
-            "library",
-            "theatre",
-            "museum",
-            "cinema",
-            "arts_centre",
-            "community_centre",
-            "events_venue",
-        ],
-        "sport": ["swimming"],
-    }
+    entertainment = (
+        'amenity in '
+        '(restaurant, fast_food, café, bar, pub, ice_cream, night_club, biergarten,'
+        ' library, theatre, museum, cinema, arts_centre, community_centre, events_venue) or '
+        'sport=swimming'
+    )
 
     @staticmethod
     def cate_benchmarks():

@@ -1,6 +1,8 @@
 import argparse
 from pathlib import Path
 
+from ohsome import OhsomeClient
+
 from xmin_core.score.scoring import score_xmin_index_one_aoi
 from xmin_core.settings import RasterS3Settings, ORSSettings
 from xmin_core.utils.configure import initialize_configs
@@ -29,6 +31,7 @@ def main_xmin(
     config_descriptor: Path,
     raster_s3_settings: RasterS3Settings,
     ors_settings: ORSSettings,
+    ohsome_client: OhsomeClient
 ):
     savedir = Path(f"./experiments/{city_name}")
 
@@ -51,6 +54,7 @@ def main_xmin(
         configs=configs,
         raster_s3_settings=raster_s3_settings,
         ors_settings=ors_settings,
+        ohsome_client=ohsome_client,
         workdir=savedir,
     )
 
@@ -64,5 +68,6 @@ if __name__ == "__main__":
     # initialize settings
     raster_s3_settings = RasterS3Settings()
     ors_settings = ORSSettings()
+    ohsome_client = OhsomeClient(user_agent='CA Research Xmin-city Accessibility')
 
-    main_xmin(city_name, config_descriptor, raster_s3_settings, ors_settings)
+    main_xmin(city_name, config_descriptor, raster_s3_settings, ors_settings, ohsome_client)
