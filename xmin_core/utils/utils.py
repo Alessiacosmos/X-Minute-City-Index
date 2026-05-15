@@ -29,8 +29,9 @@ def multiline2pt(multilines: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 geom2pt_operations = {
     "LineString": lambda g: g.interpolate(0.5, normalized=True),  # return Point
     "Polygon": lambda g: g.centroid,
-    "MultiPolygon": multipoly2pt,
     "MultiLineString": multiline2pt,
+    "MultiPolygon": multipoly2pt,
+    "GeometryCollection": lambda g: g.union_all().centroid,
 }
 
 
