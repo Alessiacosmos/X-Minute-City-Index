@@ -1,4 +1,4 @@
-from xmin_core.poi_categories.base import POICatogories
+from xmin_core.poi_categories.base import POICatogories, Category, SubCategory
 
 CATEGORY_BENCHMARKS = {
     "commerce": 5,
@@ -9,55 +9,56 @@ CATEGORY_BENCHMARKS = {
 }
 
 
-class SimpleFacilitiesCategories(POICatogories):
-    commerce = {
-        "shop": ["supermarket", "convenience", "bakery", "grocery"],
-        "amenity": ["marketplace", "bank", "post_box", "atm", "post_office"],
-    }
+class TwoLvlFacilitiesCategories(POICatogories):
+    healthcare = Category()
 
-    healthcare = {
-        "amenity": ["pharmacy", "doctors", "dentist", "hospital", "clinic"],
-        "leisure": [
-            "park",
-            "garden",
-            "fitness_centre",
-            "fitness_station",
-            "playground",
-            "sports_centre",
+    education = Category(
+        weight=0.2,
+        subcategories=[
+            SubCategory(
+                name="primary", sub_weight=0.8, tag="amenity=school and isced:level=1"
+            ),
+            SubCategory(
+                name="secondary",
+                sub_weight=0.2,
+                tag="amenity=school and (isced:level=2 or isced:level=3)",
+            ),
         ],
-        "landuse": ["recreation_ground", "forest"],
-        "club": ["sport"],
-    }
+    )
 
-    education = {"primary": {}, "amenity": ["kindergarten", "childcare", "school"]}
-
-    entertainment = {
-        "amenity": [
-            "restaurant",
-            "fast_food",
-            "café",
-            "bar",
-            "pub",
-            "ice_cream",
-            "night_club",
-            "biergarten",
-            "library",
-            "theatre",
-            "museum",
-            "cinema",
-            "arts_centre",
-            "community_centre",
-            "events_venue",
+    childcare = Category(
+        weight=0.1,
+        subcategories=[
+            SubCategory(
+                name="babycare",
+                sub_weight=0.2,
+                tag="amenity=childcare or amenity=nursery",
+            ),
+            SubCategory(
+                name="early_education",
+                sub_weight=0.5,
+                tag="amenity=kindergarten or building=kindergarten",
+            ),
+            SubCategory(
+                name="play",
+                sub_weight=0.2,
+                tag="amenity=toy_library or leisure=playground or leisure=indoor_play",
+            ),
         ],
-        "sport": ["swimming"],
-    }
+    )
+
+    daily_living = Category()
+
+    public_transport = Category()
+
+    green_space = Category()
+
+    culture_leisure = Category()
+
+    eating_out = Category()
+
+    pets = Category()
 
     @staticmethod
     def cate_benchmarks():
         return CATEGORY_BENCHMARKS
-
-
-if __name__ == "__main__":
-    print(SimpleFacilitiesCategories.obtain_benchmark("commerce"))
-    for category in SimpleFacilitiesCategories:
-        print(category.name, category.value)
