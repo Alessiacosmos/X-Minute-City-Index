@@ -2,7 +2,6 @@ from pathlib import Path
 
 import logging
 import geopandas as gpd
-import osmnx as ox
 import pandas as pd
 from ohsome import OhsomeClient, OhsomeException
 
@@ -35,7 +34,7 @@ def get_city_pois_categories(
             subcate_pois = fetch_osm_data(
                 ohsome=ohsome_client, aoi=buffered_polygon, osm_filter=subcateogry.tag
             )
-            subcate_pois['sub_category'] = subcateogry.name
+            subcate_pois["sub_category"] = subcateogry.name
 
             # convert multiple geometries to single point
             subcate_pois = geometry_to_single_point(subcate_pois, est_utm_crs)
