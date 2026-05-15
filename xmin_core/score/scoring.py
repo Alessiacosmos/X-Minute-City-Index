@@ -73,8 +73,7 @@ def score_xmin_index_one_aoi(
         hex_grids=hex_grids,
         pois_cnt_cates_files=reachable_poi_files,
         mode_speeds=configs.mode_speeds,
-        timeframes=configs.xmin_timeframes,
-        category_benchmarks=poi_setting.cate_benchmarks(),
+        poi_setting=poi_setting,
         savedir=workdir,
         is_normalize=True,
     )

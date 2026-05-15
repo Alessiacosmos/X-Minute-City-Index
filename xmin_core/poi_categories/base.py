@@ -1,6 +1,5 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import override
 
 
 @dataclass
@@ -16,9 +15,11 @@ class Category:
     subcategories: list[SubCategory]
 
 
-
-
 class POICatogories(Enum):
+    @staticmethod
+    def cate_benchmarks():
+        pass
+
     @classmethod
     def obtain_benchmark(cls, category_name: str):
         """return the benchmark value for each poi category"""
@@ -29,11 +30,12 @@ class POICatogories(Enum):
         """return weight of each poi (sub)category"""
         category_value: Category = cls[category_name].value
         parent_weight = category_value.weight
-        sub_weights = {sub_cate.name: sub_cate.sub_weight for sub_cate in category_value.subcategories}
+        sub_weights = {
+            sub_cate.name: sub_cate.sub_weight
+            for sub_cate in category_value.subcategories
+        }
 
         return dict(
             parent_weight=parent_weight,
             sub_weights=sub_weights,
         )
-
-
