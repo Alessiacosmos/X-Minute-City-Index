@@ -2,6 +2,8 @@ from pathlib import Path
 
 import logging
 import geopandas as gpd
+import osmnx as ox
+import pandas as pd
 from ohsome import OhsomeClient, OhsomeException
 
 from pyproj import CRS
@@ -27,15 +29,22 @@ def get_city_pois_categories(
         poi_categories, total=len(poi_categories), desc="Getting POIs per category"
     ):
         log.info(f"Getting pois modes for {category.name}")
-        most_pois_cate = fetch_osm_data(
-            ohsome=ohsome_client, aoi=buffered_polygon, osm_filter=category.value
-        )
+        cate_pois = []
+        for subcateogry in category.value.subcategories:
+            log.info(f"Getting pois for {subcateogry}")
+            subcate_pois = fetch_osm_data(
+                ohsome=ohsome_client, aoi=buffered_polygon, osm_filter=subcateogry.tag
+            )
+            subcate_pois['sub_category'] = subcateogry.name
 
-        # convert multiple geometries to single point
-        most_pois_cate = geometry_to_single_point(most_pois_cate, est_utm_crs)
+            # convert multiple geometries to single point
+            subcate_pois = geometry_to_single_point(subcate_pois, est_utm_crs)
+            cate_pois.append(subcate_pois)
+
+        cate_pois = pd.concat(cate_pois, ignore_index=True)
 
         savename = savedir / f"pois_pts_{category.name}.gpkg"
-        most_pois_cate.to_file(savename, driver="GPKG")
+        cate_pois.to_file(savename, driver="GPKG")
         pois_cate_filenames[category.name] = savename
 
     return pois_cate_filenames

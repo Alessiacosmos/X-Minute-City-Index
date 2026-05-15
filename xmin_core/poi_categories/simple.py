@@ -1,4 +1,4 @@
-from xmin_core.poi_categories.base import POICatogories
+from xmin_core.poi_categories.base import POICatogories, Category, SubCategory
 
 CATEGORY_BENCHMARKS = {
     "commerce": 5,
@@ -10,25 +10,61 @@ CATEGORY_BENCHMARKS = {
 
 
 class SimpleFacilitiesCategories(POICatogories):
-    commerce = (
-        "shop in (supermarket, convenience, bakery, grocery) or "
-        "amenity in (marketplace, bank, post_box, atm, post_office)"
+    commerce = Category(
+        weight = 1,
+        subcategories = [
+            SubCategory(
+                name='all',
+                sub_weight=1,
+                tag=(
+                    'shop in (supermarket, convenience, bakery, grocery) or '
+                    'amenity in (marketplace, bank, post_box, atm, post_office)'
+                ),
+            )
+        ]
     )
 
-    healthcare = (
-        "amenity in (pharmacy, doctors, dentist, hospital, clinic) or "
-        "leisure in (park, garden, fitness_centre, fitness_station, playground, sports_centre) or "
-        "landuse in (recreation_ground, forest) or "
-        "club=sport"
+    healthcare = Category(
+        weight = 1,
+        subcategories=[
+            SubCategory(
+                name='all',
+                sub_weight=1,
+                tag=(
+                    'amenity in (pharmacy, doctors, dentist, hospital, clinic) or '
+                    'leisure in (park, garden, fitness_centre, fitness_station, playground, sports_centre) or '
+                    'landuse in (recreation_ground, forest) or '
+                    'club=sport'
+                ),
+            )
+        ]
     )
 
-    education = "amenity in (kindergarten, childcare, school)"
+    education = Category(
+        weight = 1,
+        subcategories=[
+            SubCategory(
+                name='all',
+                sub_weight=1,
+                tag='amenity in (kindergarten, childcare, school)',
+            )
+        ]
+    )
 
-    entertainment = (
-        "amenity in "
-        "(restaurant, fast_food, café, bar, pub, ice_cream, night_club, biergarten,"
-        " library, theatre, museum, cinema, arts_centre, community_centre, events_venue) or "
-        "sport=swimming"
+    entertainment = Category(
+        weight = 1,
+        subcategories=[
+            SubCategory(
+                name='all',
+                sub_weight=1,
+                tag=(
+                    'amenity in '
+                    '(restaurant, fast_food, café, bar, pub, ice_cream, night_club, biergarten,'
+                    ' library, theatre, museum, cinema, arts_centre, community_centre, events_venue) or '
+                    'sport=swimming'
+                ),
+            )
+        ]
     )
 
     @staticmethod
@@ -40,3 +76,4 @@ if __name__ == "__main__":
     print(SimpleFacilitiesCategories.obtain_benchmark("commerce"))
     for category in SimpleFacilitiesCategories:
         print(category.name, category.value)
+        print(SimpleFacilitiesCategories.obtain_weights(category.name))
