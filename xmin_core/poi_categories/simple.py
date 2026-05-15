@@ -59,7 +59,7 @@ class SimpleFacilitiesCategories(POICatogories):
                 sub_weight=1,
                 tag=(
                     'amenity in '
-                    '(restaurant, fast_food, café, bar, pub, ice_cream, night_club, biergarten,'
+                    '(restaurant, fast_food, "café", bar, pub, ice_cream, night_club, biergarten,'
                     ' library, theatre, museum, cinema, arts_centre, community_centre, events_venue) or '
                     'sport=swimming'
                 ),
