@@ -29,22 +29,31 @@ The final index score is the population-weighted sum of normalized scores across
 
 
 ## Usage
-The repository now is managed by uv. 
+The repository now is managed by uv.
 
 1. Fork and clone the repository
 2. Init your uv, activate venv and do sync.
-2. Set `.env` file (please copy `.env_template` and rename it as `.env`) to access to HeiGIT population data bucket and ORS service. 
+2. Set `.env` file (please copy `.env_template` and rename it as `.env`) to access to HeiGIT population data bucket and ORS service.
 3. Run the following command:
 ```shell
 # Option 1: you want to do analysis for a city with given city name
 $ uv run python xmin_core/main_xmin.py --city Heidelberg --config configs/default.yaml
 
 # Option 2: you have a vector layer including a series of AOIs you want to analyse
-$ uv run xmin_core/cli.py --aoi_descriptor test/test_data/test_aoi_xmin.geojson  --config_descriptor configs/default.yaml --output_dir experiments/test_aoi/
+#$ uv run xmin_core/cli.py --aoi_descriptor test/test_data/test_aoi_xmin.geojson  --config_descriptor configs/default.yaml --output_dir experiments/test_aoi/
+$ uv run xmin_core/cli.py --aoi_descriptor resources/explored_cities.gpkg --aoi_id_col URAU_CODE --config_descriptor configs/default.yaml --output_dir experiments/test_aoi/
 
 # Option 2.1 if you want to do analysis following ghsl settlement data, I prepared a spefical script for you
 $ uv run xmin_core/main_xmin_urcls.py --config configs/default.yaml --output_dir experiments/urcls/
 ```
+
+## Useful Tools
+Under `tools/` folder, you can find some useful tools to prepare your data for the analysis, such as:
+```shell
+# 1. `extract_cities_of_interest.py`: extract city boundaries from given data for a list of cities.
+uv run tools/extract_cities_of_interest.py --cities_shapefile <your_cities_shapefile> --cities_of_interest_file <your_coi_list> --save_dir <your_output_dir>
+```
+
 
 ## Author
 [HeiGIT](https://heigit.org/)

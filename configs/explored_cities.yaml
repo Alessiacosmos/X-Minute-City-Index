@@ -1,0 +1,12 @@
+Germany:
+  large: ["Berlin", "Hamburg", "München", "Köln", "Frankfurt am Main", "Düsseldorf", "Stuttgart", "Leipzig", "Dortmund", "Bremen"]
+  small: ["Frankenthal (Pfalz)", "Herzogenrath", "Böblingen", "Elmshorn", "Hattingen", "Schweinfurt", "Hilden", "Görlitz", "Sankt Augustin", "Frankfurt (Oder)"]
+
+Netherlands:
+  # 's-Gravenhage = the Hague
+  large: ["Rotterdam", "Amsterdam", "'s-Gravenhage", "Utrecht", "Eindhoven", "Haarlem", "Leiden", "Groningen", "Tilburg", "Alkmaar"]
+  small: ["Veenendaal", "Bergen op Zoom", "Assen", "Soest", "Almelo", "Hoorn", "Gouda", "Roosendaal", "Hengelo", "Lelystad"]
+
+Spain:
+  large: ["Madrid", "Barcelona", "Valencia", "Bilbao", "Zaragoza", "Sevilla", "Málaga", "Alicante/Alacant", "Murcia", "Palma de Mallorca"]
+  small: ["Vícar", "Eivissa", "Huesca", "Linares", "Pinto", "Arganda del Rey", "Zamora", "Mérida", "Alcoy", "Aranjuez"]
