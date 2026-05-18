@@ -11,24 +11,24 @@ CATEGORY_BENCHMARKS = {
 
 class SimpleFacilitiesCategories(POICatogories):
     commerce = (
-        'shop in (supermarket, convenience, bakery, grocery) or '
-        'amenity in (marketplace, bank, post_box, atm, post_office)'
+        "shop in (supermarket, convenience, bakery, grocery) or "
+        "amenity in (marketplace, bank, post_box, atm, post_office)"
     )
 
     healthcare = (
-        'amenity in (pharmacy, doctors, dentist, hospital, clinic) or '
-        'leisure in (park, garden, fitness_centre, fitness_station, playground, sports_centre) or '
-        'landuse in (recreation_ground, forest) or '
-        'club=sport'
+        "amenity in (pharmacy, doctors, dentist, hospital, clinic) or "
+        "leisure in (park, garden, fitness_centre, fitness_station, playground, sports_centre) or "
+        "landuse in (recreation_ground, forest) or "
+        "club=sport"
     )
 
-    education = 'amenity in (kindergarten, childcare, school)'
+    education = "amenity in (kindergarten, childcare, school)"
 
     entertainment = (
-        'amenity in '
-        '(restaurant, fast_food, café, bar, pub, ice_cream, night_club, biergarten,'
-        ' library, theatre, museum, cinema, arts_centre, community_centre, events_venue) or '
-        'sport=swimming'
+        "amenity in "
+        "(restaurant, fast_food, café, bar, pub, ice_cream, night_club, biergarten,"
+        " library, theatre, museum, cinema, arts_centre, community_centre, events_venue) or "
+        "sport=swimming"
     )
 
     @staticmethod

@@ -17,6 +17,7 @@ def xmin_index(
     aoi_descriptor: Path,
     config_descriptor: Path,
     output_dir: Path,
+    aoi_id_col: str = None,
 ):
     """
     Calculate x-min accessibility index for the given AOIs and save results to output_dir.
@@ -25,13 +26,16 @@ def xmin_index(
                               including POI categories, timeframes, mode speeds, etc.
     :param output_dir: Path where the output layers will be saved.
                        For each AOI, a subdirectory named 'aoi_{id}' will be created to store the results.
+    :param aoi_id_col: AOI ID column's name e.g. URAU_CODE
     :return:
     """
     # initialize settings
     logger.info("Initializing settings...")
     raster_s3_settings = RasterS3Settings()
     ors_settings = ORSSettings()
-    ohsome_client = ohsome.OhsomeClient(user_agent='CA Research Xmin-city Accessibility')
+    ohsome_client = ohsome.OhsomeClient(
+        user_agent="CA Research Xmin-city Accessibility"
+    )
 
     # initialize configs
     logger.info(f"Initializing configs from {config_descriptor}...")
@@ -47,11 +51,13 @@ def xmin_index(
     for idx in tqdm(range(len(aois)), desc="Processing AOIs"):
         aoi = aois.iloc[[idx]]
 
-        aoi_id = aoi.get(
-            "id", idx
-        )  # Assuming there's an 'id' column, otherwise use the index
-        aoi_workdir = output_dir / f"aoi_{aoi_id}"
+        aoi_id = aoi[aoi_id_col].values[0] if aoi_id_col in aoi.columns else idx
+        aoi_workdir = output_dir / f"{aoi_id}"
+        logger.info(f"{aoi_id = }, {aoi_workdir = }")
         aoi_workdir.mkdir(parents=True, exist_ok=True)
+
+        # save aoi information to the workdir
+        aoi.to_file(aoi_workdir / f"aoi_{aoi_id}.geojson", driver="GeoJSON")
 
         score_xmin_index_one_aoi(
             aoi=aoi,

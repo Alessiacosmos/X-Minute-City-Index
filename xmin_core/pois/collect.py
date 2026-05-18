@@ -2,7 +2,6 @@ from pathlib import Path
 
 import logging
 import geopandas as gpd
-import osmnx as ox
 from ohsome import OhsomeClient, OhsomeException
 
 from pyproj import CRS
@@ -42,13 +41,15 @@ def get_city_pois_categories(
     return pois_cate_filenames
 
 
-def fetch_osm_data(ohsome: OhsomeClient, aoi: Polygon, osm_filter: str) -> gpd.GeoDataFrame:
+def fetch_osm_data(
+    ohsome: OhsomeClient, aoi: Polygon, osm_filter: str
+) -> gpd.GeoDataFrame:
     try:
         elements = ohsome.elements.geometry.post(
-            bpolys=aoi, clipGeometry=True, properties='tags', filter=osm_filter
+            bpolys=aoi, clipGeometry=True, properties="tags", filter=osm_filter
         ).as_dataframe()
     except OhsomeException as e:
-            raise e
+        raise e
 
     elements = elements.reset_index(drop=False)
-    return elements[['@osmId', 'geometry', '@other_tags']]
+    return elements[["@osmId", "geometry", "@other_tags"]]

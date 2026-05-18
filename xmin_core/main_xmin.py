@@ -31,7 +31,7 @@ def main_xmin(
     config_descriptor: Path,
     raster_s3_settings: RasterS3Settings,
     ors_settings: ORSSettings,
-    ohsome_client: OhsomeClient
+    ohsome_client: OhsomeClient,
 ):
     savedir = Path(f"./experiments/{city_name}")
 
@@ -68,6 +68,8 @@ if __name__ == "__main__":
     # initialize settings
     raster_s3_settings = RasterS3Settings()
     ors_settings = ORSSettings()
-    ohsome_client = OhsomeClient(user_agent='CA Research Xmin-city Accessibility')
+    ohsome_client = OhsomeClient(user_agent="CA Research Xmin-city Accessibility")
 
-    main_xmin(city_name, config_descriptor, raster_s3_settings, ors_settings, ohsome_client)
+    main_xmin(
+        city_name, config_descriptor, raster_s3_settings, ors_settings, ohsome_client
+    )
