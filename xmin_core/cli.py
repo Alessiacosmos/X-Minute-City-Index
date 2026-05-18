@@ -53,7 +53,6 @@ def xmin_index(
 
         aoi_id = aoi[aoi_id_col].values[0] if aoi_id_col in aoi.columns else idx
         aoi_workdir = output_dir / f"{aoi_id}"
-        logger.info(f"{aoi_id = }, {aoi_workdir = }")
         aoi_workdir.mkdir(parents=True, exist_ok=True)
 
         # save aoi information to the workdir
