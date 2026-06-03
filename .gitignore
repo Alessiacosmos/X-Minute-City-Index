@@ -5,6 +5,7 @@ resources/
 **/cache/
 **/__pycache__/
 
+ohsome_log/
 .env
 *.ipynb
 *experiments/
