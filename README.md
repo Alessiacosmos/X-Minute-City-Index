@@ -54,6 +54,8 @@ Under `tools/` folder, you can find some useful tools to prepare your data for t
 uv run tools/extract_cities_of_interest.py --cities_shapefile <your_cities_shapefile> --cities_of_interest_file <your_coi_list> --save_dir <your_output_dir>
 ```
 
+## Acknowledgement
+This code is evolved from the original work of Milena Bremer [X-Minute-City-Index](https://github.com/MilenaLang/X-Minute-City-Index)
 
 ## Author
 [HeiGIT](https://heigit.org/)
