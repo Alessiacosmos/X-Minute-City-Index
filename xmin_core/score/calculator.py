@@ -30,7 +30,7 @@ def get_population_info_hex_grids(
     )
 
     ##################
-    # 1. aggregate population to hex grids
+    # 2. aggregate population to hex grids
     # note: weighted_population is not necessary as population's resolution is better than hexagon size.
     ##################
     hexagons_crs = hexagons.crs
