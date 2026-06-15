@@ -1,5 +1,6 @@
 from xmin_core.poi_categories.base import POICatogories, Category, SubCategory
 
+# todo: refactor it based on newest poi settings
 CATEGORY_BENCHMARKS = {
     "commerce": 5,
     "healthcare": 5,

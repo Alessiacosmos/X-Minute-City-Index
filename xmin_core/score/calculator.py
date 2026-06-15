@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from pathlib import Path
 
 import geopandas as gpd
@@ -6,12 +7,9 @@ import pandas as pd
 from omegaconf import DictConfig
 from rasterstats import gen_zonal_stats
 
-from xmin_core.poi_categories.base import POICatogories
+from xmin_core.poi_categories.base import POICatogories, Category
 from xmin_core.settings import RasterS3Settings
 from xmin_core.utils.data_process import get_population_from_raster_data
-from xmin_core.utils.utils import (
-    normalize_score,
-)
 
 log = logging.getLogger(__name__)
 
@@ -47,17 +45,15 @@ def get_population_info_hex_grids(
 
 def get_xmin_index_score(
     hex_grids: gpd.GeoDataFrame,
-    pois_cnt_cates_files: dict,
+    reachable_poi_files: dict,
     mode_speeds: dict | DictConfig,
+    timeframes: list[int],
     poi_setting: POICatogories,
     savedir: Path,
     is_normalize: bool = True,
 ):
-    modes = mode_speeds.keys()
-    category_benchmarks = poi_setting.cate_benchmarks()
-
-    savedir = savedir / "index_score"
-    savedir.mkdir(exist_ok=True)
+    # modes = mode_speeds.keys()
+    # category_benchmarks = poi_setting.cate_benchmarks()
 
     # calculate living_normalized
     hex_grids["living_weight"] = (1 / (hex_grids["living"] / 1000)).round(
@@ -65,48 +61,80 @@ def get_xmin_index_score(
     )  # population weight: per thousand capita
 
     # get sum poi counts of each category per mode. # non-normalized poi count result
-    normed_poi_cnts = {mode: dict() for mode in modes}  # normalized
-    for name_cate, cate_poi_cnt_files in pois_cnt_cates_files.items():
-        sub_cate_weights = poi_setting.obtain_weights(name_cate)
-        for mode, mode_poi_cnt_file in cate_poi_cnt_files.items():
-            # read file
-            poi_cnt_permode_alltimes = pd.read_pickle(mode_poi_cnt_file)
+    scores_per_mode_time: dict[str, list[pd.DataFrame]] = defaultdict(list)
+    for name_cate, reachable_poi_1cate_files in reachable_poi_files.items():
+        cate_weights = poi_setting.obtain_weights(name_cate)
+        poi_cate_setting = poi_setting[name_cate].value
 
-            # normalize
-            if is_normalize:
-                # todo: current normalize is based on top-category rather than sub-category.
-                cate_benchmark = category_benchmarks[name_cate]
-                if isinstance(cate_benchmark, dict):
-                    cate_benchmark = sum(
-                        [
-                            sub_cate_benchmark
-                            for sub_cate_benchmark in cate_benchmark.values()
-                        ]
-                    )
-
-                summed = poi_cnt_permode_alltimes.T.groupby(level=0).sum().T
-
-                normed_poi_cnt_permode_alltimes = normalize_score(
-                    summed, cate_benchmark
-                )
-
-            # add one category_mode_time situation's pois_cnt to corresponding list
-            normed_poi_cnts[mode][name_cate] = (
-                normed_poi_cnt_permode_alltimes * sub_cate_weights["parent_weight"]
+        for reachable_poi_1cate_1mode_file in reachable_poi_1cate_files:
+            mode_time = reachable_poi_1cate_1mode_file.parent.stem
+            hex_reachable_pois_1cate_1mode = gpd.read_file(
+                reachable_poi_1cate_1mode_file
             )
 
+            # todo: process each sub category and count it
+            score_cate = score_one_category_by_sub_category_pois(
+                hex_reachable_pois_1cate_1mode,
+                name_cate,
+                poi_cate_setting,
+                cate_weights,
+                is_normalize,
+            )
+
+            scores_per_mode_time[mode_time].append(score_cate)
+
+        # todo: delete below commented part, after finishing the previous func.
+        # for mode, mode_poi_cnt_file in reachable_poi_file.items():
+        #     # read file
+        #     poi_cnt_permode_alltimes = pd.read_pickle(mode_poi_cnt_file)
+        #
+        #     # normalize
+        #     if is_normalize:
+        #         # todo: current normalize is based on top-category rather than sub-category.
+        #         cate_benchmark = category_benchmarks[name_cate]
+        #         if isinstance(cate_benchmark, dict):
+        #             cate_benchmark = sum(
+        #                 [
+        #                     sub_cate_benchmark
+        #                     for sub_cate_benchmark in cate_benchmark.values()
+        #                 ]
+        #             )
+        #
+        #         summed = poi_cnt_permode_alltimes.T.groupby(level=0).sum().T
+        #
+        #         normed_poi_cnt_permode_alltimes = normalize_score(
+        #             summed, cate_benchmark
+        #         )
+        #
+        #     # add one category_mode_time situation's pois_cnt to corresponding list
+        #     normed_poi_cnts[mode][name_cate] = (
+        #         normed_poi_cnt_permode_alltimes * sub_cate_weights["parent_weight"]
+        #     )
+
     # get score results: filenum = num_modes (e.g. cycle, foot)
-    for mode, normed_poi_cnt_permode in normed_poi_cnts.items():
-        # sum up all categories' poi counts for per time, per hex, and per mode.
-        normed_poi_cnt_permode: pd.DataFrame = (
-            sum(normed_poi_cnt_permode.values()) / len(normed_poi_cnt_permode)
-        ).multiply(
-            hex_grids["living_weight"], axis=0
-        )  # TODO: check why it's .mean in original code.
-        hex_scores_permode = hex_grids.merge(
-            normed_poi_cnt_permode, on="hex_id", how="left"
+    hex_grids.set_index("hex_id", inplace=True)
+    for mode_time, category_scores in scores_per_mode_time.items():
+        # sum up all categories' poi counts for per hex, per time, and per mode.
+        category_scores = pd.concat(category_scores, axis=1)
+        # get total score for every hexagon
+        hex_grids["total_score"] = category_scores.filter(like="weighted").sum(axis=1)
+
+        hex_grids["total_score_lively_weighted"] = (
+            hex_grids["total_score"] * hex_grids["living_weight"]
         )
 
         # save result
-        savename = savedir / f"{mode}_score.gpkg"
-        hex_scores_permode.to_file(savename, driver="GPKG")
+        savename = savedir / f"{mode_time}" / "score.gpkg"
+        hex_grids.to_file(savename, driver="GPKG")
+
+
+def score_one_category_by_sub_category_pois(
+    hex_reachable_pois_1cate_1mode: gpd.GeoDataFrame,
+    name_cate: str,
+    poi_cate_setting: Category,
+    cate_weights: dict,
+    is_normalize: bool,
+) -> pd.DataFrame:
+    # todo: return: hex_id and total score of this category (named as name_cate)
+
+    return pd.DataFrame().set_index("hex_id")
