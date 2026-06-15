@@ -45,6 +45,9 @@ class ORSSettings(BaseSettings):
     ors_duration_pool_number: int = 5
     ors_duration_rate_limit: int = 40
 
+    ors_isochrone_batch_size: int = 200
+    ors_isochrone_rate_limit: int = 40
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")  # dead: disable
 
     @cached_property
