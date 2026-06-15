@@ -5,7 +5,7 @@ from ohsome import OhsomeClient
 from omegaconf import DictConfig
 
 from xmin_core.pois.collect import get_city_pois_categories
-from xmin_core.pois.reachable_pois import get_reachable_poi_cnt_categories
+from xmin_core.pois.reachable_pois import get_each_hexagon_reachable_pois
 from xmin_core.score.calculator import (
     get_population_info_hex_grids,
     get_xmin_index_score,
@@ -57,7 +57,7 @@ def score_xmin_index_one_aoi(
     hex_grids = get_population_info_hex_grids(raster_s3_settings, hex_grids, aoi)
 
     # 2.3 get reachable poi counts for each category, mode, and timeframe.
-    pois_cnt_cates_files = get_reachable_poi_cnt_categories(
+    reachable_poi_files = get_each_hexagon_reachable_pois(
         ors_settings=ors_settings,
         hex_grids=hex_grids,
         city_pois_cates_files=city_pois_cates_files,
@@ -68,9 +68,10 @@ def score_xmin_index_one_aoi(
     )
 
     # 3 get score
+    # todo: update scoring as currently our reachable poi is saved as index lists.
     get_xmin_index_score(
         hex_grids=hex_grids,
-        pois_cnt_cates_files=pois_cnt_cates_files,
+        pois_cnt_cates_files=reachable_poi_files,
         mode_speeds=configs.mode_speeds,
         timeframes=configs.xmin_timeframes,
         category_benchmarks=poi_setting.cate_benchmarks(),
