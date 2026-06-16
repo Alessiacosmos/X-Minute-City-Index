@@ -181,7 +181,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
             SubCategory(
                 name="train_station",
                 sub_weight=0.7,
-                tag="station=subway or railway=station or railway=halt or railway=stop",
+                tag="station=subway or railway in (station, halt, stop)",
                 benchmark=1,
             ),
         ],
@@ -193,7 +193,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
             SubCategory(
                 name="all",
                 sub_weight=1,
-                tag="((leisure=garden and (access!=private or garden:type!=residential)) or "
+                tag="(leisure=garden and (access!=private or garden:type!=residential)) or "
                 "leisure=nature_reserve or leisure=park or natural=park or natural=beach",
                 benchmark=0.3,  # area percent of nature sapce in isochrone
             ),
@@ -206,7 +206,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
             SubCategory(
                 name="culture_entertainment",
                 sub_weight=0.5,
-                tag="amenity in (cinema, library, public_bookcase, community_centre) or"
+                tag="amenity in (cinema, library, public_bookcase, community_centre) or "
                 "museum=culture or tourism=museum or amenity in (planetarium, theatre, arts_centre)",
                 benchmark=culture_leisure_benchmark,
             ),
