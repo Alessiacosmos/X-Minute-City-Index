@@ -1,6 +1,5 @@
 import geopandas as gpd
 
-import numpy as np
 from pyproj import CRS
 from rasterio.features import shapes
 from shapely import MultiPolygon, MultiLineString
@@ -90,15 +89,12 @@ def area_ratio_within_city(hexagon, city_union) -> float:
 ################
 # normalize each categories' counts
 ################
-def normalize_score(value, benchmark, growth_rate=10) -> float:
+def normalize_score(value, benchmark) -> float:
     """
-    normalize the value to a score between 0 and 100 based on the benchmark and growth rate.
+    normalize the value to a score between 0 and 100 based on the benchmark.
     :param value: the value to be normalized
     :param benchmark: the benchmark value for normalization (e.g., 5 for commerce category)
-    :param growth_rate: the growth rate for the exponential function (default: 10). Bigger rate means faster growth.
     """
     if benchmark == 0:
         return 0
-    return np.minimum(
-        (1 - np.exp(-growth_rate / benchmark * value)) * 100, 100
-    )  # log_benchmark(value) * 100, capped at 100
+    return min(100, value / benchmark * 100)
