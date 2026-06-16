@@ -14,7 +14,6 @@ class SubCategory:
 class Category:
     weight: float
     subcategories: list[SubCategory]
-    benchmark: float | int | None = None
     group: str | None = None
 
 
@@ -29,11 +28,16 @@ class POICatogories(Enum):
         return cls.cate_benchmarks().get(category_name)
 
     @staticmethod
-    def obtain_sub_weights(subcategories: list):
-        return {sub_cate.name: sub_cate.sub_weight for sub_cate in subcategories}
+    def obtain_sub_weights_and_benchmarks(subcategories: list):
+        return {
+            sub_cate.name: dict(
+                weight=sub_cate.sub_weight, benchmark=sub_cate.benchmark
+            )
+            for sub_cate in subcategories
+        }
 
     @classmethod
-    def obtain_weights(cls, category_name: str):
+    def obtain_weights_and_benchmarks(cls, category_name: str):
         """return weight of each poi (sub)category"""
         category_value: Category = cls[category_name].value
         parent_weight = category_value.weight
@@ -41,13 +45,16 @@ class POICatogories(Enum):
         sub_weights = dict()
         for sub_cate in category_value.subcategories:
             if isinstance(sub_cate, Category):
-                sub_weights[sub_cate.group] = cls.obtain_sub_weights(
-                    sub_cate.subcategories
+                sub_weights[sub_cate.group] = dict(
+                    weight=sub_cate.weight,
+                    group=cls.obtain_sub_weights_and_benchmarks(sub_cate.subcategories),
                 )
             else:
-                sub_weights[sub_cate.name] = sub_cate.sub_weight
+                sub_weights[sub_cate.name] = dict(
+                    weight=sub_cate.sub_weight, benchmark=sub_cate.benchmark
+                )
 
         return dict(
             parent_weight=parent_weight,
-            sub_weights=sub_weights,
+            sub_weights_benchmarks=sub_weights,
         )

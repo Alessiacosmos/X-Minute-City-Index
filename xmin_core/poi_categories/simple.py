@@ -79,4 +79,4 @@ if __name__ == "__main__":
     print(SimpleFacilitiesCategories.obtain_benchmark("commerce"))
     for category in SimpleFacilitiesCategories:
         print(category.name, category.value)
-        print(SimpleFacilitiesCategories.obtain_weights(category.name))
+        print(SimpleFacilitiesCategories.obtain_weights_and_benchmarks(category.name))
