@@ -75,5 +75,5 @@ def score_xmin_index_one_aoi(
         mode_speeds=configs.mode_speeds,
         timeframes=configs.xmin_timeframes,
         poi_setting=poi_setting,
-        savedir=workdir / "scores",
+        savedir=workdir,
     )
