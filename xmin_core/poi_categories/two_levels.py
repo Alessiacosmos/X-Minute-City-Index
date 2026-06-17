@@ -194,7 +194,8 @@ class TwoLvlFacilitiesCategories(POICatogories):
                 name="all",
                 sub_weight=1,
                 tag="(leisure=garden and (access!=private or garden:type!=residential)) or "
-                "leisure=nature_reserve or leisure=park or natural=park or natural=beach",
+                "leisure=nature_reserve or leisure=park or natural=park or natural=beach or "
+                "landuse=grass or landuse=forest",
                 benchmark=0.3,  # area percent of nature sapce in isochrone
             ),
         ],
