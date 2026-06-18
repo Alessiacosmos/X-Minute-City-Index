@@ -45,6 +45,7 @@ def get_each_hexagon_reachable_pois(
         log.info(f"Processing {name_cate}...")
         # get category's data, and convert it to list
         pois_cate = gpd.read_file(pois_cate_file)
+        pois_cate.drop_duplicates(inplace=True)
 
         # do intersection with isochrones to get the reachable pois for each hexagon at different mode and timeframe, and save them
         for isochrone_file in tqdm(
@@ -61,6 +62,15 @@ def get_each_hexagon_reachable_pois(
                 isochrone, pois_cate, predicate="intersects", how="left"
             )
 
+            # re-organize it.
+            reachable_poi_ids = []
+            for hex_id, one_hex_pois in join_result.groupby("hex_id"):
+                reachable_poi_ids.append(
+                    one_hex_pois["@osmId"].dropna().values.tolist()
+                )
+
+            isochrone["poi_ids"] = reachable_poi_ids
+
             savename = (
                 savedir
                 / "scores"
@@ -68,7 +78,7 @@ def get_each_hexagon_reachable_pois(
                 / f"{name_cate}_reachable_pois.gpkg"
             )
             savename.parent.mkdir(parents=True, exist_ok=True)
-            join_result.to_file(savename)
+            isochrone.to_file(savename)
 
             if name_cate not in reachable_pois_cates_files:
                 reachable_pois_cates_files[name_cate] = []
@@ -155,7 +165,8 @@ def create_isochrone_batch(
             isochrones, crs=centroid_batch.crs
         )  # [index, geometry, properties]
     except Exception as e:
-        raise f"[isochrone calculation error]: {e}"
+        print("[isochrone calculation error] - ")
+        raise e
 
     # sleep a while to avoid over quota limitation
     time.sleep(60 / ors_settings.ors_duration_rate_limit)

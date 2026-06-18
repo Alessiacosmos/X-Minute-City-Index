@@ -1,3 +1,4 @@
+import ast
 import logging
 from collections import defaultdict
 from pathlib import Path
@@ -6,6 +7,7 @@ import geopandas as gpd
 import pandas as pd
 from pyproj import CRS
 from rasterstats import gen_zonal_stats
+from shapely import Polygon
 
 from xmin_core.poi_categories.base import POICatogories
 from xmin_core.settings import RasterS3Settings
@@ -65,10 +67,13 @@ def get_xmin_index_score(
 
         for reachable_poi_1cate_file in reachable_poi_1cate_files:
             mode_time = reachable_poi_1cate_file.parent.stem
-            hex_reachable_pois_1cate = gpd.read_file(reachable_poi_1cate_file)
+            hex_iso_reachable_pois_1cate = gpd.read_file(reachable_poi_1cate_file)
+            hex_iso_reachable_pois_1cate["poi_ids"] = hex_iso_reachable_pois_1cate[
+                "poi_ids"
+            ].apply(ast.literal_eval)
 
             score_cate = score_hexagons_one_category(
-                hex_reachable_pois_1cate=hex_reachable_pois_1cate,
+                hex_iso_reachable_pois_1cate=hex_iso_reachable_pois_1cate,
                 name_cate=name_cate,
                 cate_weights_benchmarks=cate_weights_benchmarks,
                 est_utm_crs=est_utm_crs,
@@ -95,7 +100,7 @@ def get_xmin_index_score(
 
 
 def score_hexagons_one_category(
-    hex_reachable_pois_1cate: gpd.GeoDataFrame,
+    hex_iso_reachable_pois_1cate: gpd.GeoDataFrame,
     name_cate: str,
     cate_weights_benchmarks: dict,
     est_utm_crs: CRS,
@@ -106,21 +111,30 @@ def score_hexagons_one_category(
         cate_weights_benchmarks["sub_weights_benchmarks"],
     )
 
+    hex_iso_reachable_pois_1cate = hex_iso_reachable_pois_1cate.to_crs(est_utm_crs)
+
     hex_scores = []
-    for hex_id, hex_group in hex_reachable_pois_1cate.groupby("hex_id"):
+    for i, one_hex_poi_ids in hex_iso_reachable_pois_1cate.iterrows():
         hex_score = dict()
-        hex_score["hex_id"] = hex_id
+        hex_score["hex_id"] = one_hex_poi_ids["hex_id"]
+
+        if len(one_hex_poi_ids["poi_ids"]) == 0:
+            hex_score[name_cate] = 0
+
+        pois = gpd.read_file(poi_filepath)
+        pois.drop_duplicates(inplace=True)
+        one_hex_pois = pois.set_index("@osmId").loc[one_hex_poi_ids["poi_ids"]]
 
         if name_cate == "nature_space":
             hex_score[name_cate] = score_one_hex_nature_space_by_area(
-                hex_group,
-                sub_weights_benchmarks,
+                one_hex_reachable_pois=one_hex_pois,
+                isochrone=one_hex_poi_ids.geometry,
+                sub_weights_benchmarks=sub_weights_benchmarks,
                 est_utm_crs=est_utm_crs,
-                poi_filepath=poi_filepath,
             )
         else:
             hex_score[name_cate] = score_one_hex_one_category_by_sub_category_pois(
-                hex_group, sub_weights_benchmarks
+                one_hex_pois, sub_weights_benchmarks
             )
         hex_score[f"{name_cate}_weighted"] = hex_score[name_cate] * parent_weight
         hex_scores.append(hex_score)
@@ -163,22 +177,14 @@ def score_one_hex_one_category_by_sub_category_pois(
 
 def score_one_hex_nature_space_by_area(
     one_hex_reachable_pois: gpd.GeoDataFrame,
+    isochrone: Polygon,
     sub_weights_benchmarks: dict,
     est_utm_crs: CRS,
-    poi_filepath: Path,
 ) -> float:
     default_nature_space_area = 100
     smallest_nature_space_area = 25
 
-    # pre-process hex isochrone and pois
-    isochrone = (
-        one_hex_reachable_pois.iloc[[0]].to_crs(crs=est_utm_crs).iloc[0].geometry
-    )
-
-    pois = gpd.read_file(poi_filepath)
-    pois_in_iso = pois.loc[one_hex_reachable_pois["index_right"].values].to_crs(
-        est_utm_crs
-    )
+    pois_in_iso = one_hex_reachable_pois.to_crs(est_utm_crs)
 
     pois_in_iso["area"] = default_nature_space_area
 

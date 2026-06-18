@@ -42,6 +42,7 @@ def get_city_pois_categories(
             cate_pois.extend(subcate_pois)
 
         cate_pois = pd.concat(cate_pois, ignore_index=True)
+        cate_pois.drop_duplicates(inplace=True)
 
         savename = savedir / f"pois_pts_{category.name}.gpkg"
         cate_pois.to_file(savename, driver="GPKG")
