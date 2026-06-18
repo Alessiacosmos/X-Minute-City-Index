@@ -167,7 +167,8 @@ def score_one_hex_nature_space_by_area(
     est_utm_crs: CRS,
     poi_filepath: Path,
 ) -> float:
-    default_nature_space_area = 40
+    default_nature_space_area = 100
+    smallest_nature_space_area = 25
 
     # pre-process hex isochrone and pois
     isochrone = (
@@ -192,7 +193,7 @@ def score_one_hex_nature_space_by_area(
                 pois_in_iso_polygon["area"] = pois_in_iso_polygon.area
 
                 pois_in_iso_polygon.loc[
-                    pois_in_iso_polygon["area"] < default_nature_space_area, "area"
+                    pois_in_iso_polygon["area"] < smallest_nature_space_area, "area"
                 ] = 0
                 pois_area_in_iso += pois_in_iso_polygon["area"].sum()
             case _:
