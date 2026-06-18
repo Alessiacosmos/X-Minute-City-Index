@@ -122,7 +122,7 @@ def score_hexagons_one_category(
             hex_score[name_cate] = score_one_hex_one_category_by_sub_category_pois(
                 hex_group, sub_weights_benchmarks
             )
-            hex_score[f"{name_cate}_weighted"] = hex_score[name_cate] * parent_weight
+        hex_score[f"{name_cate}_weighted"] = hex_score[name_cate] * parent_weight
         hex_scores.append(hex_score)
 
     hex_scores = pd.DataFrame(hex_scores)

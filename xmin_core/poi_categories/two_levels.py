@@ -14,7 +14,6 @@ class TwoLvlFacilitiesCategories(POICatogories):
             case x if x > 2:
                 return min(100, 25 + 15 + (poi_count - 2) * 10)
 
-    # todo: the sum of sub_weights in each category is not always 1.0, need to check.
     education = Category(
         weight=0.2,
         subcategories=[
