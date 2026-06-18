@@ -89,7 +89,7 @@ def area_ratio_within_city(hexagon, city_union) -> float:
 ################
 # normalize each categories' counts
 ################
-def normalize_score(value, benchmark) -> float:
+def normalize_score(value: int | float, benchmark: int | float | staticmethod) -> float:
     """
     normalize the value to a score between 0 and 100 based on the benchmark.
     :param value: the value to be normalized
@@ -100,4 +100,7 @@ def normalize_score(value, benchmark) -> float:
 
     # another way with growth_rate - making it grow fast at start and then slow.
     # np.minimum((1 - np.exp(-growth_rate/benchmark * value)) * 100, 100) # log_benchmark(value) * 100, capped at 100
-    return min(100, value / benchmark * 100)
+    if isinstance(benchmark, staticmethod):
+        return benchmark(value)
+    else:
+        return min(100, value / benchmark * 100)
