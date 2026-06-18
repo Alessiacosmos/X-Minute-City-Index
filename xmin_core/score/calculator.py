@@ -39,7 +39,7 @@ def get_population_info_hex_grids(
         stats=["sum"],
         all_touched=True,
     )
-    hexagons["living"] = [s["sum"] for s in stats]
+    hexagons["population"] = [s["sum"] for s in stats]
 
     return hexagons.to_crs(hexagons_crs)
 
@@ -53,7 +53,7 @@ def get_xmin_index_score(
     est_utm_crs = hex_grids.estimate_utm_crs()
 
     # calculate living_normalized
-    hex_grids["living_weighted"] = (1 / (hex_grids["living"] / 1000)).round(
+    hex_grids["population_weighted"] = (1 / (hex_grids["population"] / 1000)).round(
         2
     )  # population weight: per thousand capita
 
@@ -85,8 +85,8 @@ def get_xmin_index_score(
         # get total score for every hexagon
         hex_grids["total_score"] = category_scores.filter(like="weighted").sum(axis=1)
 
-        hex_grids["total_score_lively_weighted"] = (
-            hex_grids["total_score"] * hex_grids["living_weighted"]
+        hex_grids["total_score_pop_weighted"] = (
+            hex_grids["total_score"] * hex_grids["population_weighted"]
         )
 
         # save result

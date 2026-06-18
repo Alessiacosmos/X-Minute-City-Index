@@ -7,7 +7,7 @@ CATEGORY_BENCHMARKS = {
     "healthcare": 5,
     "education": 5,
     "entertainment": 20,
-    "living": 2000,
+    "population": 2000,
 }
 
 
