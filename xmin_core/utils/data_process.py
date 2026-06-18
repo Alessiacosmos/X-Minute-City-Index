@@ -58,7 +58,7 @@ def get_hex_grids(
     # Create a GeoDataFrame from the features
     hexagon_features = gpd.GeoDataFrame.from_features(hexagon_features, crs=4326)
 
-    return hexagon_features.set_index("hex_id")
+    return hexagon_features
 
 
 def get_population_from_raster_data(
