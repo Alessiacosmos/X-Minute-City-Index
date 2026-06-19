@@ -54,11 +54,6 @@ def get_xmin_index_score(
 ):
     est_utm_crs = hex_grids.estimate_utm_crs()
 
-    # calculate living_normalized
-    hex_grids["population_weighted"] = (1 / (hex_grids["population"] / 1000)).round(
-        2
-    )  # population weight: per thousand capita
-
     # get sum poi counts of each category per mode. # non-normalized poi count result
     scores_per_mode_time: dict[str, list[pd.DataFrame]] = defaultdict(list)
     for name_cate, reachable_poi_1cate_files in reachable_poi_files.items():
@@ -90,13 +85,16 @@ def get_xmin_index_score(
         # get total score for every hexagon
         hex_grids["total_score"] = category_scores.filter(like="weighted").sum(axis=1)
 
-        hex_grids["total_score_pop_weighted"] = (
-            hex_grids["total_score"] * hex_grids["population_weighted"]
-        )
+        # get city-level analysis
+        city_score = score_city_level(hex_grids)
 
         # save result
-        savename = savedir / "scores" / f"{mode_time}" / "score.gpkg"
-        hex_grids.to_file(savename, driver="GPKG")
+        hex_grids.to_file(
+            savedir / "scores" / f"{mode_time}" / "score.gpkg", driver="GPKG"
+        )
+        city_score.to_csv(
+            savedir / "scores" / f"{mode_time}" / "score_city.csv", index=True
+        )
 
 
 def score_hexagons_one_category(
@@ -224,3 +222,20 @@ def score_sub_cate(
         normalize_score(value=sub_poi_num, benchmark=weight_benchmark["benchmark"])
         * weight_benchmark["weight"]
     )
+
+
+def score_city_level(
+    hex_scores: gpd.GeoDataFrame,
+) -> pd.DataFrame:
+    hex_scores["total_score_pop_weighted"] = (
+        hex_scores["population"]
+        * hex_scores["total_score"]
+        / hex_scores["population"].sum()
+    )
+
+    base_stats = hex_scores.describe()  # mean, std, min, 25, 50, 75, max
+    sum_stat = pd.DataFrame(hex_scores.drop(["geometry"], axis=1).sum(axis=0)).T.rename(
+        index={0: "sum"}
+    )
+
+    return pd.concat([base_stats, sum_stat])
