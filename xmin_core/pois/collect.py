@@ -80,5 +80,5 @@ def fetch_osm_data(
         raise e
 
     elements = elements.reset_index(drop=False)
-    print(elements)
+
     return elements[["@osmId", "geometry", "@other_tags"]]
