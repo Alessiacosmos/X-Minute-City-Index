@@ -45,7 +45,6 @@ def get_each_hexagon_reachable_pois(
         log.info(f"Processing {name_cate}...")
         # get category's data, and convert it to list
         pois_cate = gpd.read_file(pois_cate_file)
-        pois_cate.drop_duplicates(inplace=True)
 
         # do intersection with isochrones to get the reachable pois for each hexagon at different mode and timeframe, and save them
         for isochrone_file in tqdm(

@@ -26,7 +26,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
             SubCategory(
                 name="secondary",
                 sub_weight=0.2,
-                tag="amenity=school and (isced:level=2 or isced:level=3)",
+                tag='amenity=school and (isced:level=2 or isced:level=3 or isced:level="2-3")',
                 benchmark=1,
             ),
         ],
