@@ -120,7 +120,6 @@ def score_hexagons_one_category(
             hex_score[name_cate] = 0
 
         pois = gpd.read_file(poi_filepath)
-        pois.drop_duplicates(inplace=True)
         one_hex_pois = pois.set_index("@osmId").loc[one_hex_poi_ids["poi_ids"]]
 
         if name_cate == "nature_space":
