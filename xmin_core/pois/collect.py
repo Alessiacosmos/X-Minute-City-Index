@@ -2,14 +2,14 @@ from pathlib import Path
 
 import logging
 import geopandas as gpd
+import pandas as pd
 from ohsome import OhsomeClient, OhsomeException
 
 from pyproj import CRS
 from shapely import Polygon
 from tqdm import tqdm
 
-from xmin_core.poi_categories.base import POICatogories
-from xmin_core.utils.utils import geometry_to_single_point
+from xmin_core.poi_categories.base import POICatogories, SubCategory, Category
 
 log = logging.getLogger(__name__)
 
@@ -27,18 +27,44 @@ def get_city_pois_categories(
         poi_categories, total=len(poi_categories), desc="Getting POIs per category"
     ):
         log.info(f"Getting pois modes for {category.name}")
-        most_pois_cate = fetch_osm_data(
-            ohsome=ohsome_client, aoi=buffered_polygon, osm_filter=category.value
-        )
+        cate_pois = []
+        for subcategory in category.value.subcategories:
+            log.info(f"Getting pois for {subcategory}")
+            if isinstance(subcategory, Category):
+                subcategory = subcategory.subcategories
+            else:
+                subcategory = [subcategory]
+            subcate_pois = get_pois_sub_categories(
+                subcategories=subcategory,
+                ohsome_client=ohsome_client,
+                buffered_polygon=buffered_polygon,
+            )
+            cate_pois.extend(subcate_pois)
 
-        # convert multiple geometries to single point
-        most_pois_cate = geometry_to_single_point(most_pois_cate, est_utm_crs)
+        cate_pois = pd.concat(cate_pois, ignore_index=True)
+        cate_pois.drop_duplicates(inplace=True)
 
         savename = savedir / f"pois_pts_{category.name}.gpkg"
-        most_pois_cate.to_file(savename, driver="GPKG")
+        cate_pois.to_file(savename, driver="GPKG")
         pois_cate_filenames[category.name] = savename
 
     return pois_cate_filenames
+
+
+def get_pois_sub_categories(
+    subcategories: list[SubCategory],
+    ohsome_client: OhsomeClient,
+    buffered_polygon: Polygon,
+) -> list[gpd.GeoDataFrame]:
+    parent_cate_pois = []
+    for leaf_cateogry in subcategories:
+        leaf_cate_pois = fetch_osm_data(
+            ohsome=ohsome_client, aoi=buffered_polygon, osm_filter=leaf_cateogry.tag
+        )
+        leaf_cate_pois["sub_category"] = leaf_cateogry.name
+        parent_cate_pois.append(leaf_cate_pois)
+
+    return parent_cate_pois
 
 
 def fetch_osm_data(

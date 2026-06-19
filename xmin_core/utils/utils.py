@@ -1,6 +1,5 @@
 import geopandas as gpd
 
-import numpy as np
 from pyproj import CRS
 from rasterio.features import shapes
 from shapely import MultiPolygon, MultiLineString
@@ -29,8 +28,9 @@ def multiline2pt(multilines: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 geom2pt_operations = {
     "LineString": lambda g: g.interpolate(0.5, normalized=True),  # return Point
     "Polygon": lambda g: g.centroid,
-    "MultiPolygon": multipoly2pt,
     "MultiLineString": multiline2pt,
+    "MultiPolygon": multipoly2pt,
+    "GeometryCollection": lambda g: g.union_all().centroid,
 }
 
 
@@ -89,15 +89,18 @@ def area_ratio_within_city(hexagon, city_union) -> float:
 ################
 # normalize each categories' counts
 ################
-def normalize_score(value, benchmark, growth_rate=10) -> float:
+def normalize_score(value: int | float, benchmark: int | float | staticmethod) -> float:
     """
-    normalize the value to a score between 0 and 100 based on the benchmark and growth rate.
+    normalize the value to a score between 0 and 100 based on the benchmark.
     :param value: the value to be normalized
     :param benchmark: the benchmark value for normalization (e.g., 5 for commerce category)
-    :param growth_rate: the growth rate for the exponential function (default: 10). Bigger rate means faster growth.
     """
     if benchmark == 0:
         return 0
-    return np.minimum(
-        (1 - np.exp(-growth_rate / benchmark * value)) * 100, 100
-    )  # log_benchmark(value) * 100, capped at 100
+
+    # another way with growth_rate - making it grow fast at start and then slow.
+    # np.minimum((1 - np.exp(-growth_rate/benchmark * value)) * 100, 100) # log_benchmark(value) * 100, capped at 100
+    if isinstance(benchmark, staticmethod):
+        return benchmark(value)
+    else:
+        return min(100, value / benchmark * 100)

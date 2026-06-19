@@ -68,13 +68,9 @@ def score_xmin_index_one_aoi(
     )
 
     # 3 get score
-    # todo: update scoring as currently our reachable poi is saved as index lists.
     get_xmin_index_score(
         hex_grids=hex_grids,
-        pois_cnt_cates_files=reachable_poi_files,
-        mode_speeds=configs.mode_speeds,
-        timeframes=configs.xmin_timeframes,
-        category_benchmarks=poi_setting.cate_benchmarks(),
+        reachable_poi_files=reachable_poi_files,
+        poi_setting=poi_setting,
         savedir=workdir,
-        is_normalize=True,
     )
