@@ -26,6 +26,11 @@ def get_city_pois_categories(
     for category in tqdm(
         poi_categories, total=len(poi_categories), desc="Getting POIs per category"
     ):
+        savename = savedir / f"pois_pts_{category.name}.gpkg"
+        if savename.exists():
+            pois_cate_filenames[category.name] = savename
+            continue
+
         log.info(f"Getting pois modes for {category.name}")
         cate_pois = []
         for subcategory in category.value.subcategories:
@@ -46,7 +51,6 @@ def get_city_pois_categories(
             subset=["@osmId", "geometry", "sub_category"], inplace=True
         )
 
-        savename = savedir / f"pois_pts_{category.name}.gpkg"
         cate_pois.to_file(savename, driver="GPKG")
         pois_cate_filenames[category.name] = savename
 

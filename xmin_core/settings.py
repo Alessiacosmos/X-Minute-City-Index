@@ -46,7 +46,7 @@ class ORSSettings(BaseSettings):
     ors_duration_rate_limit: int = 40
 
     ors_isochrone_batch_size: int = 5
-    ors_isochrone_rate_limit: int = 30
+    ors_isochrone_rate_limit: int = 40
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")  # dead: disable
 
@@ -54,10 +54,14 @@ class ORSSettings(BaseSettings):
     def client(self) -> openrouteservice.Client:
         # For future reference maybe check this suggestion: https://gitlab.heigit.org/climate-action/plugins/walkability/-/merge_requests/82#note_61406
         if self.ors_base_url is None:
-            client = openrouteservice.Client(key=self.ors_api_key)
+            client = openrouteservice.Client(
+                key=self.ors_api_key, retry_over_query_limit=True
+            )
         else:
             client = openrouteservice.Client(
-                base_url=self.ors_base_url, key=self.ors_api_key
+                base_url=self.ors_base_url,
+                key=self.ors_api_key,
+                retry_over_query_limit=True,
             )
 
         openrouteservice.client._RETRIABLE_STATUSES = {502, 503}

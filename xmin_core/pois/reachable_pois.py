@@ -102,6 +102,11 @@ def create_isochrones(
     isochrone_savenames = []
     for mode in speed_modes:
         for time_range in timeframes:
+            savename = savedir / f"{mode}_{time_range}min.gpkg"
+            if savename.exists():
+                isochrone_savenames.append(savename)
+                continue
+
             _get_isochrone_batch_partial = partial(
                 create_isochrone_batch,
                 mode=mode,
@@ -126,7 +131,6 @@ def create_isochrones(
                 f"calculate {len(iso_1mode_1time)} hexagon's isochrones but should get {len(centroids)}."
             )
 
-            savename = savedir / f"{mode}_{time_range}min.gpkg"
             iso_1mode_1time.to_file(savename)
 
             isochrone_savenames.append(savename)
