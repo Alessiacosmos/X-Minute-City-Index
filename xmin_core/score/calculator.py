@@ -52,6 +52,9 @@ def get_xmin_index_score(
     poi_setting: POICatogories,
     savedir: Path,
 ):
+    if (savedir / "scores").exists():
+        return
+
     est_utm_crs = hex_grids.estimate_utm_crs()
 
     # get sum poi counts of each category per mode. # non-normalized poi count result
