@@ -120,7 +120,7 @@ def create_isochrones(
                 ors_settings=ors_settings,
             )
 
-            with ThreadPool(ors_settings.ors_duration_pool_number) as pool:
+            with ThreadPool(ors_settings.ors_isochrone_pool_number) as pool:
                 iso_1mode_1time = list(
                     tqdm(
                         pool.map(_get_isochrone_batch_partial, batched_centroids),
