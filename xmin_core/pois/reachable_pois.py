@@ -55,6 +55,18 @@ def get_each_hexagon_reachable_pois(
             isochrone = gpd.read_file(isochrone_file)
             mode_time_str = isochrone_file.stem
 
+            savename = (
+                savedir
+                / "scores"
+                / f"{mode_time_str}"
+                / f"{name_cate}_reachable_pois.gpkg"
+            )
+            if savename.exists():
+                if name_cate not in reachable_pois_cates_files:
+                    reachable_pois_cates_files[name_cate] = []
+                reachable_pois_cates_files[name_cate].append(savename)
+                continue
+
             # spatial join to get the reachable pois for each hexagon at this mode and timeframe
             # join_result will have columns: hex_id, geometry (isochrone), and poi info (from pois_cate) incl. tags
             join_result = gpd.sjoin(
@@ -70,12 +82,6 @@ def get_each_hexagon_reachable_pois(
 
             isochrone["poi_ids"] = reachable_poi_ids
 
-            savename = (
-                savedir
-                / "scores"
-                / f"{mode_time_str}"
-                / f"{name_cate}_reachable_pois.gpkg"
-            )
             savename.parent.mkdir(parents=True, exist_ok=True)
             isochrone.to_file(savename)
 
