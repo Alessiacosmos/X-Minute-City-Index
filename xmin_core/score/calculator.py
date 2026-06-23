@@ -185,6 +185,8 @@ def score_one_hex_nature_space_by_area(
     default_nature_space_area = 100
     smallest_nature_space_area = 25
 
+    isochrone = isochrone if isochrone.is_valid else isochrone.buffer(0)
+
     pois_in_iso = one_hex_reachable_pois.to_crs(est_utm_crs)
 
     pois_in_iso["area"] = default_nature_space_area
