@@ -38,7 +38,7 @@ class RasterS3Settings(BaseSettings):
 
 
 class ORSSettings(BaseSettings):
-    ors_base_url: str | None = None
+    ors_base_url: str = "https://api.heigit.org/openrouteservice"
     ors_api_key: str | None = None
 
     ors_duration_batch_size: int = 500
