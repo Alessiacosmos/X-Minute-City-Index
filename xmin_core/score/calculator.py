@@ -52,9 +52,6 @@ def get_xmin_index_score(
     poi_setting: POICatogories,
     savedir: Path,
 ):
-    if (savedir / "scores").exists():
-        return
-
     est_utm_crs = hex_grids.estimate_utm_crs()
 
     # get sum poi counts of each category per mode. # non-normalized poi count result
@@ -65,6 +62,10 @@ def get_xmin_index_score(
 
         for reachable_poi_1cate_file in reachable_poi_1cate_files:
             mode_time = reachable_poi_1cate_file.parent.stem
+
+            if (savedir / "scores" / mode_time / "score.gpkg").exists():
+                continue
+
             hex_iso_reachable_pois_1cate = gpd.read_file(reachable_poi_1cate_file)
             hex_iso_reachable_pois_1cate["poi_ids"] = hex_iso_reachable_pois_1cate[
                 "poi_ids"
