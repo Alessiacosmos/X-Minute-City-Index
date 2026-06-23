@@ -1,19 +1,19 @@
 from xmin_core.poi_categories.base import POICatogories, Category, SubCategory
 
 
-class TwoLvlFacilitiesCategories(POICatogories):
-    @staticmethod
-    def culture_leisure_benchmark(poi_count: int):
-        match poi_count:
-            case x if x < 1:
-                return 0
-            case 1:
-                return 25
-            case 2:
-                return 25 + 15
-            case x if x > 2:
-                return min(100, 25 + 15 + (poi_count - 2) * 10)
+def culture_leisure_benchmark(poi_count: int):
+    match poi_count:
+        case x if x < 1:
+            return 0
+        case 1:
+            return 25
+        case 2:
+            return 25 + 15
+        case x if x > 2:
+            return min(100, 25 + 15 + (poi_count - 2) * 10)
 
+
+class TwoLvlFacilitiesCategories(POICatogories):
     education = Category(
         weight=0.2,
         subcategories=[
