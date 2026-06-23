@@ -2,7 +2,7 @@
 
 #SBATCH --job-name xmin:cli_60_cities
 #SBATCH --partition=cpu-single
-#SBATCH --time=24:00:00
+#SBATCH --time=18:00:00
 #SBATCH --mem=8gb
 #SBATCH --mail-user gefei.kong@heigit.org
 #SBATCH --mail-type ALL         # ALL will alert you of job beginning, completion, failure etc
