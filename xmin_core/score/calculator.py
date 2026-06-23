@@ -8,7 +8,6 @@ import pandas as pd
 from pyproj import CRS
 from rasterstats import gen_zonal_stats
 from shapely import Polygon
-from tqdm import tqdm
 
 from xmin_core.poi_categories.base import POICatogories
 from xmin_core.settings import RasterS3Settings
@@ -57,15 +56,9 @@ def get_xmin_index_score(
 
     # get sum poi counts of each category per mode. # non-normalized poi count result
     scores_per_mode_time: dict[str, list[pd.DataFrame]] = defaultdict(list)
-    for name_cate, reachable_poi_1cate_files in tqdm(
-        reachable_poi_files.items(),
-        total=len(reachable_poi_files),
-        desc="Scoring each category...",
-    ):
+    for name_cate, reachable_poi_1cate_files in reachable_poi_files.items():
         cate_weights_benchmarks = poi_setting.obtain_weights_and_benchmarks(name_cate)
         # poi_cate_setting = poi_setting[name_cate].value
-        if name_cate != "nature_space":
-            continue
 
         for reachable_poi_1cate_file in reachable_poi_1cate_files:
             mode_time = reachable_poi_1cate_file.parent.stem
@@ -78,7 +71,6 @@ def get_xmin_index_score(
                 "poi_ids"
             ].apply(ast.literal_eval)
 
-            print(f"{reachable_poi_1cate_file = }")
             score_cate = score_hexagons_one_category(
                 hex_iso_reachable_pois_1cate=hex_iso_reachable_pois_1cate,
                 name_cate=name_cate,
@@ -203,11 +195,9 @@ def score_one_hex_nature_space_by_area(
     for geom_type in pois_in_iso.geometry.type.unique():
         match geom_type:
             case "MultiPolygon" | "Polygon" | "GeometryCollection":
-                pois_in_iso_polygon = (
-                    pois_in_iso[pois_in_iso.geom_type == geom_type]
-                    .make_valid()
-                    .clip(isochrone)
-                )
+                pois_in_iso_polygon = pois_in_iso[
+                    pois_in_iso.geom_type == geom_type
+                ].clip(isochrone)
 
                 pois_in_iso_polygon["area"] = pois_in_iso_polygon.area
 
