@@ -8,6 +8,7 @@ import pandas as pd
 from pyproj import CRS
 from rasterstats import gen_zonal_stats
 from shapely import Polygon
+from tqdm import tqdm
 
 from xmin_core.poi_categories.base import POICatogories
 from xmin_core.settings import RasterS3Settings
@@ -56,7 +57,11 @@ def get_xmin_index_score(
 
     # get sum poi counts of each category per mode. # non-normalized poi count result
     scores_per_mode_time: dict[str, list[pd.DataFrame]] = defaultdict(list)
-    for name_cate, reachable_poi_1cate_files in reachable_poi_files.items():
+    for name_cate, reachable_poi_1cate_files in tqdm(
+        reachable_poi_files.items(),
+        total=len(reachable_poi_files),
+        desc="Scoring each category...",
+    ):
         cate_weights_benchmarks = poi_setting.obtain_weights_and_benchmarks(name_cate)
         # poi_cate_setting = poi_setting[name_cate].value
 
@@ -188,7 +193,7 @@ def score_one_hex_nature_space_by_area(
     isochrone = isochrone if isochrone.is_valid else isochrone.buffer(0)
 
     pois_in_iso = one_hex_reachable_pois.to_crs(est_utm_crs)
-
+    pois_in_iso["geometry"] = pois_in_iso.make_valid()
     pois_in_iso["area"] = default_nature_space_area
 
     pois_area_in_iso = 0
