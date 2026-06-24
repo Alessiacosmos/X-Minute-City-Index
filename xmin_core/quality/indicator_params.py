@@ -1,5 +1,6 @@
 from dataclasses import dataclass, asdict
 
+
 @dataclass
 class IndicatorParams:
     topic: str
@@ -8,10 +9,12 @@ class IndicatorParams:
     def to_dict(self) -> dict:
         return asdict(self)
 
+
 @dataclass
 class MapSaturationOrCurrentness(IndicatorParams):
     topicTitle: str
     topicFilter: str
+
 
 @dataclass
 class AttributeCompleteness(IndicatorParams):
@@ -28,9 +31,19 @@ def get_indicator_params(
 ) -> dict[str, str | dict]:
     match indicator:
         case "map_saturation" | "currentness":
-            params = MapSaturationOrCurrentness(topic=topic, bpolys=bpolys, topicTitle=title, topicFilter=filter,)
+            params = MapSaturationOrCurrentness(
+                topic=topic,
+                bpolys=bpolys,
+                topicTitle=title,
+                topicFilter=filter,
+            )
         case "attribute_completeness":
-            params = AttributeCompleteness(topic=topic, bpolys=bpolys, attributeTitle=title, attributeFilter=filter,)
+            params = AttributeCompleteness(
+                topic=topic,
+                bpolys=bpolys,
+                attributeTitle=title,
+                attributeFilter=filter,
+            )
         case _:
             raise ValueError(
                 f"Invalid indicator: {indicator!r}. "
