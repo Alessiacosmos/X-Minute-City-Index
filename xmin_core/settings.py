@@ -112,3 +112,29 @@ class ORSSettings(BaseSettings):
                 os.remove(path)
         except OSError:
             pass
+
+
+class OhsomeQualitySettings(BaseSettings):
+    ohsome_quality_base_url: str = "https://api.quality.ohsome.org/v1-test"
+    ohsome_quality_endpoint: str = "/indicators"
+
+    indicator_map_saturation = "/mapping-saturation"
+    indicator_attribute_completeness = "/attribute-completeness"
+    indicator_currentness = "currentness"
+
+    ohsome_quality_headers = {"accept": "application/json"}
+
+    # ref: https://github.com/GIScience/ohsome-quality-api-examples/blob/main/OQAPI_grid_request.py
+    @cached_property
+    def base_indicator_url(self) -> str:
+        return self.ohsome_quality_base_url + self.ohsome_quality_endpoint
+
+    def indicator_url(self, indicator: str) -> str:
+        """Query URL for a given indicator name, e.g. 'mapping_saturation'."""
+        key = f"indicator_{indicator}"
+        path = getattr(self, key, None)
+        if path is None:
+            raise ValueError(
+                f"Unknown indicator: '{indicator}'. No setting '{key}' found."
+            )
+        return self.base_indicator_url + path
