@@ -21,6 +21,7 @@ dependencies = [
     "openrouteservice>=2.3.3",
     "osmnx~=2.0.6",
     "pandas~=2.3.3",
+    "plotly>=6.8.0",
     "psycopg2-binary>=2.9.12",
     "pydantic-settings>=2.14.0",
     "pyproj~=3.7.2",
