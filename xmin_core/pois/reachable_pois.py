@@ -5,7 +5,9 @@ from multiprocessing.pool import ThreadPool
 from pathlib import Path
 
 import geopandas as gpd
+import numpy as np
 import pandas as pd
+from openrouteservice.exceptions import ApiError
 from pyproj import CRS
 from tqdm import tqdm
 
@@ -55,6 +57,18 @@ def get_each_hexagon_reachable_pois(
             isochrone = gpd.read_file(isochrone_file)
             mode_time_str = isochrone_file.stem
 
+            savename = (
+                savedir
+                / "scores"
+                / f"{mode_time_str}"
+                / f"{name_cate}_reachable_pois.gpkg"
+            )
+            # if savename.exists():
+            #     if name_cate not in reachable_pois_cates_files:
+            #         reachable_pois_cates_files[name_cate] = []
+            #     reachable_pois_cates_files[name_cate].append(savename)
+            #     continue
+
             # spatial join to get the reachable pois for each hexagon at this mode and timeframe
             # join_result will have columns: hex_id, geometry (isochrone), and poi info (from pois_cate) incl. tags
             join_result = gpd.sjoin(
@@ -70,12 +84,6 @@ def get_each_hexagon_reachable_pois(
 
             isochrone["poi_ids"] = reachable_poi_ids
 
-            savename = (
-                savedir
-                / "scores"
-                / f"{mode_time_str}"
-                / f"{name_cate}_reachable_pois.gpkg"
-            )
             savename.parent.mkdir(parents=True, exist_ok=True)
             isochrone.to_file(savename)
 
@@ -102,6 +110,11 @@ def create_isochrones(
     isochrone_savenames = []
     for mode in speed_modes:
         for time_range in timeframes:
+            savename = savedir / f"{mode}_{time_range}min.gpkg"
+            # if savename.exists():
+            #     isochrone_savenames.append(savename)
+            #     continue
+
             _get_isochrone_batch_partial = partial(
                 create_isochrone_batch,
                 mode=mode,
@@ -109,8 +122,8 @@ def create_isochrones(
                 ors_settings=ors_settings,
             )
 
-            with ThreadPool(ors_settings.ors_duration_pool_number) as pool:
-                iso_1mode_1time = list(
+            with ThreadPool(ors_settings.ors_isochrone_pool_number) as pool:
+                iso_1mode_1time_with_abnormal_info = list(
                     tqdm(
                         pool.map(_get_isochrone_batch_partial, batched_centroids),
                         total=len(batched_centroids),
@@ -118,18 +131,26 @@ def create_isochrones(
                     )
                 )
 
-            iso_1mode_1time = gpd.GeoDataFrame(
-                pd.concat(iso_1mode_1time), crs=centroids.crs
-            )
+            iso_results, abnormal_hex_ids = zip(*iso_1mode_1time_with_abnormal_info)
 
-            assert len(iso_1mode_1time) == len(centroids), (
+            iso_1mode_1time = gpd.GeoDataFrame(
+                pd.concat(iso_results), crs=centroids.crs
+            )
+            abnormal_hex_ids = np.unique(np.hstack(abnormal_hex_ids))
+
+            assert (len(iso_1mode_1time) + len(abnormal_hex_ids)) == len(centroids), (
                 f"calculate {len(iso_1mode_1time)} hexagon's isochrones but should get {len(centroids)}."
             )
 
-            savename = savedir / f"{mode}_{time_range}min.gpkg"
             iso_1mode_1time.to_file(savename)
-
             isochrone_savenames.append(savename)
+
+            if len(abnormal_hex_ids) > 0:
+                np.savetxt(
+                    savename.parent / f"{savename.stem}_abnormal_hex_ids.txt",
+                    abnormal_hex_ids,
+                    fmt="%s",
+                )
 
     return isochrone_savenames
 
@@ -139,7 +160,7 @@ def create_isochrone_batch(
     mode: str,
     time_range: int,
     ors_settings: ORSSettings,
-) -> gpd.GeoDataFrame:
+) -> tuple[gpd.GeoDataFrame, list[str]]:
     """
     Processes a batch of POIs to calculate travel time matrices
     :param center_coords: List of coordinates for center points
@@ -152,6 +173,7 @@ def create_isochrone_batch(
     )
 
     # Send the POST request to the ORS API with the dynamic URL
+    iso, abnormal_hex_ids = None, []
     try:
         isochrones = ors_settings.client.isochrones(
             locations=list(zip(centroid_batch.geometry.x, centroid_batch.geometry.y)),
@@ -163,13 +185,22 @@ def create_isochrone_batch(
         iso = gpd.GeoDataFrame.from_features(
             isochrones, crs=centroid_batch.crs
         )  # [index, geometry, properties]
+        # sleep a while to avoid over quota limitation
+        time.sleep(60 / ors_settings.ors_duration_rate_limit)
+        iso["hex_id"] = centroid_batch["hex_id"].values
     except Exception as e:
         print("[isochrone calculation error] - ")
-        raise e
+        if (
+            isinstance(e, ApiError)
+            and e.args[0] == 500
+            and e.message.get("error", {}).get("code") == 3099
+        ):
+            # cannot create isochrone (because the region is too far away from the road (may be at the sea)
+            abnormal_hex_ids.append(centroid_batch["hex_id"].values)
+        else:
+            raise e
 
-    # sleep a while to avoid over quota limitation
-    time.sleep(60 / ors_settings.ors_duration_rate_limit)
+    if len(abnormal_hex_ids) > 0:
+        abnormal_hex_ids = np.hstack(abnormal_hex_ids).tolist()
 
-    iso["hex_id"] = centroid_batch["hex_id"].values
-
-    return iso
+    return iso, abnormal_hex_ids

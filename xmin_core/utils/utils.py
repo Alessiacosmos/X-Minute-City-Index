@@ -100,7 +100,7 @@ def normalize_score(value: int | float, benchmark: int | float | staticmethod) -
 
     # another way with growth_rate - making it grow fast at start and then slow.
     # np.minimum((1 - np.exp(-growth_rate/benchmark * value)) * 100, 100) # log_benchmark(value) * 100, capped at 100
-    if isinstance(benchmark, staticmethod):
+    if callable(benchmark):
         return benchmark(value)
     else:
         return min(100, value / benchmark * 100)

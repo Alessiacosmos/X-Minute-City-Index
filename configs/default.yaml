@@ -1,4 +1,4 @@
-xmin_timeframes: [15, 20, 25, 30]
+xmin_timeframes: [15, 30]
 
 mode_speeds:
   foot-walking: 1.3889  # m/s (5 km/h)
