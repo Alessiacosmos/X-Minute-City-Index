@@ -16,6 +16,13 @@ class Category:
     subcategories: list[SubCategory]
     group: str | None = None
 
+    def to_tag(self) -> str:
+        parts = [
+            sub.to_tag() if isinstance(sub, Category) else sub.tag
+            for sub in self.subcategories
+        ]
+        return "(" + " or ".join(parts) + ")"
+
 
 class POICatogories(Enum):
     @staticmethod

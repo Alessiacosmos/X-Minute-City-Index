@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict
 @dataclass
 class IndicatorParams:
     topic: str
-    bploys: dict
+    bpolys: dict
 
     def to_dict(self) -> dict:
         return asdict(self)

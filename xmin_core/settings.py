@@ -118,11 +118,11 @@ class OhsomeQualitySettings(BaseSettings):
     ohsome_quality_base_url: str = "https://api.quality.ohsome.org/v1-test"
     ohsome_quality_endpoint: str = "/indicators"
 
-    indicator_map_saturation = "/mapping-saturation"
-    indicator_attribute_completeness = "/attribute-completeness"
-    indicator_currentness = "currentness"
+    indicator_map_saturation: str = "/mapping-saturation"
+    indicator_attribute_completeness: str = "/attribute-completeness"
+    indicator_currentness: str = "currentness"
 
-    ohsome_quality_headers = {"accept": "application/json"}
+    ohsome_quality_headers: dict[str, str] = {"accept": "application/json"}
 
     # ref: https://github.com/GIScience/ohsome-quality-api-examples/blob/main/OQAPI_grid_request.py
     @cached_property
