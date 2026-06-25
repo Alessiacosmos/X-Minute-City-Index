@@ -63,11 +63,11 @@ def get_each_hexagon_reachable_pois(
                 / f"{mode_time_str}"
                 / f"{name_cate}_reachable_pois.gpkg"
             )
-            if savename.exists():
-                if name_cate not in reachable_pois_cates_files:
-                    reachable_pois_cates_files[name_cate] = []
-                reachable_pois_cates_files[name_cate].append(savename)
-                continue
+            # if savename.exists():
+            #     if name_cate not in reachable_pois_cates_files:
+            #         reachable_pois_cates_files[name_cate] = []
+            #     reachable_pois_cates_files[name_cate].append(savename)
+            #     continue
 
             # spatial join to get the reachable pois for each hexagon at this mode and timeframe
             # join_result will have columns: hex_id, geometry (isochrone), and poi info (from pois_cate) incl. tags
@@ -111,9 +111,9 @@ def create_isochrones(
     for mode in speed_modes:
         for time_range in timeframes:
             savename = savedir / f"{mode}_{time_range}min.gpkg"
-            if savename.exists():
-                isochrone_savenames.append(savename)
-                continue
+            # if savename.exists():
+            #     isochrone_savenames.append(savename)
+            #     continue
 
             _get_isochrone_batch_partial = partial(
                 create_isochrone_batch,

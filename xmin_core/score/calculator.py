@@ -70,8 +70,8 @@ def get_xmin_index_score(
         for reachable_poi_1cate_file in reachable_poi_1cate_files:
             mode_time = reachable_poi_1cate_file.parent.stem
 
-            if (savedir / "scores" / mode_time / "score_categories.csv").exists():
-                continue
+            # if (savedir / "scores" / mode_time / "score_categories.csv").exists():
+            #     continue
 
             hex_iso_reachable_pois_1cate = gpd.read_file(reachable_poi_1cate_file)
             hex_iso_reachable_pois_1cate["poi_ids"] = hex_iso_reachable_pois_1cate[
