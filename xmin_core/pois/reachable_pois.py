@@ -111,9 +111,9 @@ def create_isochrones(
     for mode in speed_modes:
         for time_range in timeframes:
             savename = savedir / f"{mode}_{time_range}min.gpkg"
-            # if savename.exists():
-            #     isochrone_savenames.append(savename)
-            #     continue
+            if savename.exists():
+                isochrone_savenames.append(savename)
+                continue
 
             _get_isochrone_batch_partial = partial(
                 create_isochrone_batch,
