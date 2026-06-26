@@ -3,6 +3,7 @@ from functools import partial
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Literal
+from warnings import warn
 
 import geopandas as gpd
 import plotly.graph_objects as go
@@ -66,12 +67,22 @@ def evaluate_poi_quality_per_category(
         category_value.to_tag() + " and (type:node or type:way or type:relation)"
     )
 
+    kwargs = dict()
+    if indicator == "attribute_completeness":
+        warn(
+            "currently we're using the category_filter for defining the topic and attribute_completeness query. "
+            "If you want to seperate sub-categories, please re-write the code."
+        )
+        kwargs = dict(
+            attribute_title=f"attr_{category_name}", attribute_filter=category_filter
+        )
     indicator_params = get_indicator_params(
         indicator,
         topic="custom-topic",
         bpolys=aoi_geojson,
         title=category_name.capitalize(),
         filter=category_filter,
+        **kwargs,
     )
 
     response = requests.post(

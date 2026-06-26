@@ -1,4 +1,5 @@
 from dataclasses import dataclass, asdict
+from typing import Optional
 
 
 @dataclass
@@ -11,13 +12,13 @@ class IndicatorParams:
 
 
 @dataclass
-class MapSaturationOrCurrentness(IndicatorParams):
+class CustomTopicParams(IndicatorParams):
     topicTitle: str
     topicFilter: str
 
 
 @dataclass
-class AttributeCompleteness(IndicatorParams):
+class AttributeCompleteness(CustomTopicParams):
     attributeTitle: str
     attributeFilter: str
 
@@ -28,21 +29,28 @@ def get_indicator_params(
     bpolys: dict,
     title: str,
     filter: str,
+    attribute_title: Optional[str] = None,
+    attribute_filter: Optional[str] = None,
 ) -> dict[str, str | dict]:
     match indicator:
         case "map_saturation" | "currentness":
-            params = MapSaturationOrCurrentness(
+            params = CustomTopicParams(
                 topic=topic,
                 bpolys=bpolys,
                 topicTitle=title,
                 topicFilter=filter,
             )
         case "attribute_completeness":
+            assert (attribute_title is not None) and (attribute_filter is not None), (
+                "For attribute_completeness, attribute_tile and attribute_filter shouldn't be empty"
+            )
             params = AttributeCompleteness(
                 topic=topic,
                 bpolys=bpolys,
-                attributeTitle=title,
-                attributeFilter=filter,
+                topicTitle=title,
+                topicFilter=filter,
+                attributeTitle=attribute_title,
+                attributeFilter=attribute_filter,
             )
         case _:
             raise ValueError(
