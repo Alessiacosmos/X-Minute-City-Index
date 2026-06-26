@@ -1,0 +1,31 @@
+# entrance of starting the special case, instead of call cli at command line many times
+from pathlib import Path
+
+from xmin_core.cli import xmin_index
+
+
+def compute_healthcare_case(
+    aoi_descriptor_dir: Path,
+    config_descriptors: list[Path],
+    output_dir: Path,
+):
+    # todo: aoi_descriptor_dir
+    #  prepare the gpkg files of city subsets we're interested in this special case
+    #  & save them to <aoi_descriptor_dir>.
+    #  They will be named as DE_subset.gpkg, ES_subset.gpkg, NL_subset.gpkg, respectively.
+    #  So the full path will look like <aoi_descriptor_dir>/'DE_subset.gpkg'
+
+    # todo: config_descriptors
+    #  prepare corresponding config files, to run the computation
+
+    for config_dscp in config_descriptors:
+        country_code = config_dscp.stem.split("_")[1].capitalize()  # e.g. DE
+        xmin_index(
+            aoi_descriptor=aoi_descriptor_dir / f"{country_code}_subset.gpkg",
+            config_descriptor=config_dscp,
+            output_dir=output_dir,
+            aoi_id_col="URAU_CODE",
+            activated_funcs=[
+                "accessibility"
+            ],  # accessibility only, as in this special case the quality won't change
+        )

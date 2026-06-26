@@ -1,0 +1,8 @@
+xmin_timeframes: [15]
+
+mode_speeds:
+  foot-walking: 1.3889  # m/s (5 km/h)
+
+hex_resolution: 8 # Set the  H3 resolution. ref: https://h3geo.org/docs/core-library/restable/
+
+poi_setting: 'healthcare_de' # todo: update it to new-defined and registered poi class
