@@ -9,3 +9,4 @@ ohsome_log/
 .env
 *.ipynb
 *experiments/
+tools/shells/

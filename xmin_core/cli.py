@@ -78,7 +78,6 @@ def xmin_index(
             )
 
         if "quality" in activated_funcs and quality_indicators is not None:
-            # todo: buffer the aoi
             buffered_aoi = (
                 gpd.GeoDataFrame(geometry=[aois.iloc[[idx]].union_all()], crs=aoi.crs)
                 .to_crs(aoi.estimate_utm_crs())
