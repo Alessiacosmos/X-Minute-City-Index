@@ -50,7 +50,7 @@ def evaluate_poi_quality(
 
         result_savename = save_dir / f"{indicator}_all.json"
         with open(result_savename, "w") as jsf:
-            json.dump(result_values, jsf)
+            json.dump(result_values, jsf, indent=4)
 
 
 def evaluate_poi_quality_per_category(
@@ -87,4 +87,5 @@ def evaluate_poi_quality_per_category(
     figure = adjust_figure_funcs[indicator](figure)
     figure.write_json(savedir / f"{indicator}_{category_name}.json")
 
-    return {category_name: result["value"]}
+    result.pop("figure")
+    return {category_name: result}

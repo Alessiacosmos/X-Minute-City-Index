@@ -79,8 +79,14 @@ def xmin_index(
 
         if "quality" in activated_funcs and quality_indicators is not None:
             # todo: buffer the aoi
+            buffered_aoi = (
+                gpd.GeoDataFrame(geometry=[aois.iloc[[idx]].union_all()], crs=aoi.crs)
+                .to_crs(aoi.estimate_utm_crs())
+                .buffer(configs.max_buffer_distance)
+                .to_crs(4326)
+            )
             evaluate_poi_quality(
-                aoi=aois.iloc[[idx]],  # geoseries
+                aoi=buffered_aoi,  # geoseries
                 indicators=quality_indicators,
                 ohsome_quality_settings=ohsome_quality_settings,
                 poi_setting=configs.poi_setting,
