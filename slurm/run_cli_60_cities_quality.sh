@@ -1,9 +1,9 @@
 #!/bin/bash -l
 
-#SBATCH --job-name xmin:cli_60_cities
+#SBATCH --job-name xmin:cli_60_cities_quality
 #SBATCH --partition=cpu-single
-#SBATCH --time=18:00:00
-#SBATCH --mem=8gb
+#SBATCH --time=1:00:00
+#SBATCH --mem=2gb
 #SBATCH --mail-user gefei.kong@heigit.org
 #SBATCH --mail-type ALL         # ALL will alert you of job beginning, completion, failure etc
 #SBATCH --output=slurm/logs/%x.%j.out
