@@ -1,6 +1,8 @@
 # entrance of starting the special case, instead of call cli at command line many times
 from pathlib import Path
 
+from jsonargparse import auto_cli
+
 from xmin_core.cli import xmin_index
 
 
@@ -24,3 +26,7 @@ def compute_healthcare_case(
                 "accessibility"
             ],  # accessibility only, as in this special case the quality won't change
         )
+
+
+if __name__ == "__main__":
+    auto_cli(compute_healthcare_case, as_positional=False)
