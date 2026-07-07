@@ -27,9 +27,9 @@ def get_city_pois_categories(
         poi_categories, total=len(poi_categories), desc="Getting POIs per category"
     ):
         savename = savedir / f"pois_pts_{category.name}.gpkg"
-        # if savename.exists():
-        #     pois_cate_filenames[category.name] = savename
-        #     continue
+        if savename.exists():
+            pois_cate_filenames[category.name] = savename
+            continue
 
         log.info(f"Getting pois modes for {category.name}")
         cate_pois = []
