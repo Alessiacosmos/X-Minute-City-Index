@@ -32,7 +32,11 @@ logger.handlers.clear()
 logger.setLevel(log_level)
 
 console_handler = logging.StreamHandler()
-console_handler.setFormatter(AnsiColorFormatter("%(levelname)s: %(message)s"))
+console_handler.setFormatter(
+    AnsiColorFormatter(
+        fmt="%(asctime)s [%(levelname)s]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    )
+)
 logger.addHandler(console_handler)
 
 logging.getLogger("pyogrio").setLevel(logging.WARNING)
