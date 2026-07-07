@@ -67,7 +67,7 @@ def xmin_index(
         # save aoi information to the workdir
         aoi.to_file(aoi_workdir / f"aoi_{aoi_id}.geojson", driver="GeoJSON")
 
-        if "accessbility" in activated_funcs:
+        if "accessibility" in activated_funcs:
             score_xmin_index_one_aoi(
                 aoi=aoi,
                 configs=configs,
