@@ -2,7 +2,7 @@ from xmin_core.poi_categories.base import POICatogories, Category, SubCategory
 
 
 class DEHealthCareCategories(POICatogories):
-    # todo: update this poi_category setting for Germany (DE)
+    # special poi_category setting for Germany (DE)
     healthcare = Category(
         weight=0.1,
         subcategories=[
@@ -38,7 +38,7 @@ class DEHealthCareCategories(POICatogories):
 
 
 class NLHealthCareCategories(POICatogories):
-    # todo: update this poi_category setting for the Netherlands (NL)
+    # special poi_category setting for the Netherlands (NL)
     healthcare = Category(
         weight=0.1,
         subcategories=[
@@ -74,16 +74,29 @@ class NLHealthCareCategories(POICatogories):
 
 
 class ESHealthCareCategories(POICatogories):
-    # todo: update this poi_category setting for Spain (ES)
+    # special poi_category setting for Spain (ES)
     healthcare = Category(
         weight=0.1,
         subcategories=[
-            SubCategory(
-                name="primary_care",
-                sub_weight=0.49,
-                tag="(amenity=doctors or healthcare=doctor or amenity=clinic) and "
-                "(healthcare:speciality=general or healthcare:speciality=internal)",
-                benchmark=3, # OR 1 if it is a clinic
+            Category(
+                group="primary_care",
+                weight=0.49,
+                subcategories=[
+                    SubCategory(
+                        name="primary_care_clinic",
+                        sub_weight=1,
+                        tag="amenity=clinic",
+                        benchmark=1,
+                    ),
+                    SubCategory(
+                        name="primary_care_other",
+                        sub_weight=1,
+                        tag="amenity!=clinic and "
+                        "(amenity=doctors or healthcare=doctor) and "
+                        "(healthcare:speciality=general or healthcare:speciality=internal)",
+                        benchmark=3,
+                    ),
+                ],
             ),
             SubCategory(
                 name="dentist",
