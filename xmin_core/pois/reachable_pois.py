@@ -140,7 +140,11 @@ def create_isochrones(
 
             iso_results, abnormal_hex_ids = zip(*iso_1mode_1time_with_abnormal_info)
 
-            if savename.exists():  # append the new isochrones calculated from abnormal hexagons to the existing isochrones
+            # append the new isochrones calculated from abnormal hexagons to the existing isochrones
+            if savename.exists():
+                # all abnormal hexagons cannot create isochrones, so we don't need to append anything
+                if all(x is None for x in iso_results):
+                    continue
                 iso_1mode_1time = gpd.read_file(savename)
                 iso_1mode_1time = gpd.GeoDataFrame(
                     pd.concat(
