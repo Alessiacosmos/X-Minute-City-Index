@@ -61,6 +61,30 @@ def xmin_index(
         aoi = aois.iloc[[idx]]
 
         aoi_id = aoi[aoi_id_col].values[0] if aoi_id_col in aoi.columns else idx
+        if aoi_id in [
+            "NL029C",
+            "NL027C",
+            "NL019C",
+            "NL024C",
+            "NL018C",
+            "NL017C",
+            "NL016C",
+            "NL014C",
+            "NL010C",
+            "NL009C",
+            "NL003C",
+            "NL002C",
+            "NL001C",
+            "DE148C",
+            "DE142C",
+            "DE135C",
+            "DE131C",
+            "DE128C",
+            "DE074C",
+            "DE072C",
+            "DE071C",
+        ]:
+            continue
         aoi_workdir = output_dir / f"{aoi_id}"
         aoi_workdir.mkdir(parents=True, exist_ok=True)
 
