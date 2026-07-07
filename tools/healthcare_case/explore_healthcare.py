@@ -9,22 +9,12 @@ def compute_healthcare_case(
     config_descriptor_dir: Path,
     output_dir: Path,
 ):
-    # todo: aoi_descriptor_dir
-    #  prepare the gpkg files of city subsets we're interested in this special case
-    #  & save them to <aoi_descriptor_dir>.
-    #  They will be named as DE_subset.gpkg, ES_subset.gpkg, NL_subset.gpkg, respectively.
-    #  So the full path will look like <aoi_descriptor_dir>/'DE_subset.gpkg'
-
-    # todo: config_descriptor_dir
-    #  prepare corresponding config files at the dir, to run the computation
-    #  e.g. resources/healthcare_case
-
     # todo: prepare output_dir
     #  manually copy-paste each interested city's isochrones foot-walking result to the output_dir. (to speed up)
     #  e.g. in the output_dir, we will have <output_dir>/<URAU_CODE>/isochrones/foot-walking_15min.gpkg
 
     for config_descriptor in config_descriptor_dir.glob("*.yaml"):
-        country_code = config_descriptor.stem.split("_")[1].capitalize()  # e.g. DE
+        country_code = config_descriptor.stem.split("_")[1].upper()  # e.g. DE
         xmin_index(
             aoi_descriptor=aoi_descriptor_dir / f"{country_code}_subset.gpkg",
             config_descriptor=config_descriptor,
