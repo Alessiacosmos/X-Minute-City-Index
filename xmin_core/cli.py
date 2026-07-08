@@ -61,8 +61,6 @@ def xmin_index(
         aoi = aois.iloc[[idx]]
 
         aoi_id = aoi[aoi_id_col].values[0] if aoi_id_col in aoi.columns else idx
-        if aoi_id != "NL030C":
-            continue
         aoi_workdir = output_dir / f"{aoi_id}"
         aoi_workdir.mkdir(parents=True, exist_ok=True)
 
