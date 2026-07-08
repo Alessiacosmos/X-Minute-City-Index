@@ -9,7 +9,7 @@ class DEHealthCareCategories(POICatogories):
             SubCategory(
                 name="primary_care",
                 sub_weight=0.4,
-                tag="(amenity=doctors or healthcare=doctor or amenity=clinic) and "
+                tag="(amenity=doctors or healthcare=doctor or amenity=clinic or healthcare=clinic) and "
                 "(healthcare:speciality=general or healthcare:speciality=internal)",
                 benchmark=3,
             ),
@@ -45,7 +45,7 @@ class NLHealthCareCategories(POICatogories):
             SubCategory(
                 name="primary_care",
                 sub_weight=0.39,
-                tag="(amenity=doctors or healthcare=doctor or amenity=clinic) and "
+                tag="(amenity=doctors or healthcare=doctor or amenity=clinic or healthcare=clinic) and "
                 "(healthcare:speciality=general or healthcare:speciality=internal)",
                 benchmark=3,
             ),
@@ -85,14 +85,13 @@ class ESHealthCareCategories(POICatogories):
                     SubCategory(
                         name="primary_care_clinic",
                         sub_weight=1,
-                        tag="amenity=clinic",
+                        tag="amenity=clinic or healthcare=clinic",
                         benchmark=1,
                     ),
                     SubCategory(
                         name="primary_care_other",
                         sub_weight=1,
-                        tag="amenity!=clinic and "
-                        "(amenity=doctors or healthcare=doctor) and "
+                        tag="(amenity=doctors or healthcare=doctor) and "
                         "(healthcare:speciality=general or healthcare:speciality=internal)",
                         benchmark=3,
                     ),
