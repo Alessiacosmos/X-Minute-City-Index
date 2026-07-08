@@ -76,13 +76,17 @@ def get_each_hexagon_reachable_pois(
             )
 
             # re-organize it.
-            reachable_poi_ids = []
-            for hex_id, one_hex_pois in join_result.groupby("hex_id"):
-                reachable_poi_ids.append(
-                    one_hex_pois["@osmId"].dropna().values.tolist()
-                )
+            reachable_poi_id_map = (
+                join_result.groupby("hex_id")["@osmId"]
+                .apply(lambda s: s.dropna().tolist())
+                .to_dict()
+            )
 
-            isochrone["poi_ids"] = reachable_poi_ids
+            isochrone["poi_ids"] = (
+                isochrone["hex_id"]
+                .map(reachable_poi_id_map)
+                .apply(lambda x: x if isinstance(x, list) else [])
+            )
 
             savename.parent.mkdir(parents=True, exist_ok=True)
             isochrone.to_file(savename)
