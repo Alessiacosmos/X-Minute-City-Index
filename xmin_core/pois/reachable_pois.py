@@ -111,16 +111,16 @@ def create_isochrones(
                 savename.parent / f"{savename.stem}_abnormal_hex_ids.txt"
             )
             if savename.exists():
-                # pre-processing to check the abnormal hexagons that cannot create isochrones, and save them to a txt file
-                if savename_abnormal_hex_ids.exists():
-                    abnormal_hex_ids = np.loadtxt(savename_abnormal_hex_ids, dtype=str)
-                    abnormal_centroids = centroids[
-                        centroids["hex_id"].isin(abnormal_hex_ids)
-                    ]
-                    batched_centroids = batch_hexes(abnormal_centroids, 1)
-                else:
-                    isochrone_savenames.append(savename)
-                    continue
+                # # pre-processing to check the abnormal hexagons that cannot create isochrones, and save them to a txt file
+                # if savename_abnormal_hex_ids.exists():
+                #     abnormal_hex_ids = np.loadtxt(savename_abnormal_hex_ids, dtype=str)
+                #     abnormal_centroids = centroids[
+                #         centroids["hex_id"].isin(abnormal_hex_ids)
+                #     ]
+                #     batched_centroids = batch_hexes(abnormal_centroids, 1)
+                # else:
+                isochrone_savenames.append(savename)
+                continue
 
             _get_isochrone_batch_partial = partial(
                 create_isochrone_batch,
