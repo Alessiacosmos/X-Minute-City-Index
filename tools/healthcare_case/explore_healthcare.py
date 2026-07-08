@@ -11,10 +11,6 @@ def compute_healthcare_case(
     config_descriptor_dir: Path,
     output_dir: Path,
 ):
-    # todo: prepare output_dir
-    #  manually copy-paste each interested city's isochrones foot-walking result to the output_dir. (to speed up)
-    #  e.g. in the output_dir, we will have <output_dir>/<URAU_CODE>/isochrones/foot-walking_15min.gpkg
-
     for config_descriptor in config_descriptor_dir.glob("*.yaml"):
         country_code = config_descriptor.stem.split("_")[1].upper()  # e.g. DE
         xmin_index(
