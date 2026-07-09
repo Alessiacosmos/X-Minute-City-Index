@@ -52,6 +52,12 @@ uv run tools/extract_cities_of_interest.py --cities_shapefile <your_cities_shape
 ## Dev Tips
 1. Currently, please do everything at `refactor` branch. Once the code is stable, we will merge it to `main` branch.
 
+## Take care!
+Here an known issue for batched isochrone calculation -
+if your AOI covers region unreachable (e.g. sea, deep forest, etc.), the isochrone cannot be calculated correctly and will trigger an error (3099, cannot calculate isochrone) for entire batch.
+E.g., you're calculating 10 hexagons' isochrones in one batch, and one of them is unreachable, the entire batch will fail.
+In such case, these hexagons will be skipped and the failed hexagon id will be saved, and you can re-run the isochrone calculation for the failed hexagons only one by one later.
+
 ## Acknowledgement
 This code is evolved from the original work of Milena Bremer [X-Minute-City-Index](https://github.com/MilenaLang/X-Minute-City-Index)
 
