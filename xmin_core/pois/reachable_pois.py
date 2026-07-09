@@ -76,13 +76,17 @@ def get_each_hexagon_reachable_pois(
             )
 
             # re-organize it.
-            reachable_poi_ids = []
-            for hex_id, one_hex_pois in join_result.groupby("hex_id"):
-                reachable_poi_ids.append(
-                    one_hex_pois["@osmId"].dropna().values.tolist()
-                )
+            reachable_poi_id_map = (
+                join_result.groupby("hex_id")["@osmId"]
+                .apply(lambda s: s.dropna().tolist())
+                .to_dict()
+            )
 
-            isochrone["poi_ids"] = reachable_poi_ids
+            isochrone["poi_ids"] = (
+                isochrone["hex_id"]
+                .map(reachable_poi_id_map)
+                .apply(lambda x: x if isinstance(x, list) else [])
+            )
 
             savename.parent.mkdir(parents=True, exist_ok=True)
             isochrone.to_file(savename)
@@ -101,19 +105,26 @@ def create_isochrones(
     timeframes: list,
     savedir: Path,
 ) -> list[Path]:
-    batched_centroids = []
-    for i in range(0, len(centroids), ors_settings.ors_isochrone_batch_size):
-        batched_centroids.append(
-            centroids.iloc[i : i + ors_settings.ors_isochrone_batch_size].reset_index()
-        )
+    batched_centroids = batch_hexes(centroids, ors_settings.ors_isochrone_batch_size)
 
     isochrone_savenames = []
     for mode in speed_modes:
         for time_range in timeframes:
             savename = savedir / f"{mode}_{time_range}min.gpkg"
-            # if savename.exists():
-            #     isochrone_savenames.append(savename)
-            #     continue
+            savename_abnormal_hex_ids = (
+                savename.parent / f"{savename.stem}_abnormal_hex_ids.txt"
+            )
+            if savename.exists():
+                # pre-processing to check the abnormal hexagons that cannot create isochrones, and save them to a txt file
+                if savename_abnormal_hex_ids.exists():
+                    abnormal_hex_ids = np.loadtxt(savename_abnormal_hex_ids, dtype=str)
+                    abnormal_centroids = centroids[
+                        centroids["hex_id"].isin(abnormal_hex_ids)
+                    ]
+                    batched_centroids = batch_hexes(abnormal_centroids, 1)
+                else:
+                    isochrone_savenames.append(savename)
+                    continue
 
             _get_isochrone_batch_partial = partial(
                 create_isochrone_batch,
@@ -133,9 +144,22 @@ def create_isochrones(
 
             iso_results, abnormal_hex_ids = zip(*iso_1mode_1time_with_abnormal_info)
 
-            iso_1mode_1time = gpd.GeoDataFrame(
-                pd.concat(iso_results), crs=centroids.crs
-            )
+            # append the new isochrones calculated from abnormal hexagons to the existing isochrones
+            if savename.exists():
+                # all abnormal hexagons cannot create isochrones, so we don't need to append anything
+                if all(x is None for x in iso_results):
+                    continue
+                iso_1mode_1time = gpd.read_file(savename)
+                iso_1mode_1time = gpd.GeoDataFrame(
+                    pd.concat(
+                        [iso_1mode_1time, pd.concat(iso_results)], ignore_index=True
+                    ),
+                    crs=centroids.crs,
+                )
+            else:
+                iso_1mode_1time = gpd.GeoDataFrame(
+                    pd.concat(iso_results), crs=centroids.crs
+                )
             abnormal_hex_ids = np.unique(np.hstack(abnormal_hex_ids))
 
             assert (len(iso_1mode_1time) + len(abnormal_hex_ids)) == len(centroids), (
@@ -147,12 +171,20 @@ def create_isochrones(
 
             if len(abnormal_hex_ids) > 0:
                 np.savetxt(
-                    savename.parent / f"{savename.stem}_abnormal_hex_ids.txt",
+                    savename_abnormal_hex_ids,
                     abnormal_hex_ids,
                     fmt="%s",
                 )
 
     return isochrone_savenames
+
+
+def batch_hexes(centroids: gpd.GeoDataFrame, batch_size: int) -> list[gpd.GeoDataFrame]:
+    batched_centroids = []
+    for i in range(0, len(centroids), batch_size):
+        batched_centroids.append(centroids.iloc[i : i + batch_size].reset_index())
+
+    return batched_centroids
 
 
 def create_isochrone_batch(
