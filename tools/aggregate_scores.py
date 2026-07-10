@@ -56,6 +56,7 @@ def aggregate_city_scores(
         )
         qscore_city = extract_quality_score_one_aoi(
             aoi_id=aoi_id,
+            category_weights=categories,
             aoi_quality_dir=score_root_dir / aoi_id / "quality",
         )
         category_scores_city = calc_category_score_one_aoi(
@@ -121,6 +122,7 @@ def extract_accessibility_score_one_aoi(
 
 def extract_quality_score_one_aoi(
     aoi_id: str,
+    category_weights: dict[str, float],
     aoi_quality_dir: Path,
 ) -> dict[str, float]:
     qscore_city = dict(aoi_id=aoi_id)
@@ -128,8 +130,15 @@ def extract_quality_score_one_aoi(
     with open(aoi_quality_dir / "map_saturation_all.json", "r") as qf:
         qscore_per_category = json.load(qf)
 
+    weighted_total_qscore = 0.0
     for category, qscore in qscore_per_category.items():
-        qscore_city[f"{category}"] = qscore["value"]
+        if qscore["value"] is not None:
+            qscore_city[category] = qscore["value"] * 100  # convert to percentage
+            weighted_total_qscore += qscore_city[category] * category_weights[category]
+        else:  # some saturation curve cannot calculate, e.g. NL016C - education, we need pass them
+            qscore_city[category] = qscore["value"]
+
+    qscore_city["total"] = weighted_total_qscore
 
     return qscore_city
 
