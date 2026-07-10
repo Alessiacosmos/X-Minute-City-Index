@@ -1,4 +1,5 @@
 import itertools
+import json
 from pathlib import Path
 
 import geopandas as gpd
@@ -30,43 +31,46 @@ def aggregate_city_scores(
     configs = OmegaConf.load(config_descriptor)
 
     # Initialize an empty DataFrame to hold aggregated scores
-    aggregated_scores = []
+    aggregated_accessibility_scores = []
+    aggregated_quality_scores = []
 
     for idx in range(len(aois)):
         aoi = aois.iloc[[idx]]
 
         aoi_id = aoi[aoi_id_col].values[0] if aoi_id_col in aoi.columns else idx
 
-        aoi_score_dir = score_root_dir / aoi_id / "scores"
-
-        if not aoi_score_dir.exists():
-            print(f"Score directory for AOI {aoi_id} does not exist. Skipping.")
-            continue
-
-        score_city = extract_score_one_aoi(
+        score_city = extract_accessibility_score_one_aoi(
             aoi_id=aoi_id,
-            aoi_score_dir=aoi_score_dir,
+            aoi_score_dir=score_root_dir / aoi_id / "scores",
             travel_modes=list(configs.mode_speeds.keys()),
             travel_times=configs.xmin_timeframes,
         )
-        aggregated_scores.append(score_city)
+        qscore_city = extract_quality_score_one_aoi(
+            aoi_id=aoi_id,
+            aoi_quality_dir=score_root_dir / aoi_id / "quality",
+        )
+        aggregated_accessibility_scores.append(score_city)
+        aggregated_quality_scores.append(qscore_city)
 
-    aggregated_scores = pd.DataFrame(aggregated_scores).rename(
-        columns={"aoi_id": aoi_id_col}
+    aoi_accessibility_scores = merge_scores_to_geom(
+        aggregated_accessibility_scores, aois, aoi_id_col
     )
-    aoi_scores = aois.merge(aggregated_scores, on=aoi_id_col, how="left")
+    aoi_quality_scores = merge_scores_to_geom(
+        aggregated_quality_scores, aois, aoi_id_col
+    )
 
     # Save the aggregated scores to a CSV file
-    aoi_scores.to_file(score_root_dir / "all_city_scores.gpkg")
-    print(f"Aggregated scores saved to {score_root_dir / 'all_city_scores.gpkg'}")
+    aoi_accessibility_scores.to_file(score_root_dir / "all_city_scores.gpkg")
+    aoi_quality_scores.to_file(score_root_dir / "all_city_quality_scores.gpkg")
+    print(f"Aggregated scores saved to {score_root_dir}")
 
 
-def extract_score_one_aoi(
+def extract_accessibility_score_one_aoi(
     aoi_id: str,
     aoi_score_dir: Path,
     travel_modes: list[str],
     travel_times: list[int],
-):
+) -> dict[str, float]:
     score_city = dict(aoi_id=aoi_id)
     for mode, time in itertools.product(travel_modes, travel_times):
         score_mode_time_dir = aoi_score_dir / f"{mode}_{time}min"
@@ -82,6 +86,32 @@ def extract_score_one_aoi(
         ]
 
     return score_city
+
+
+def extract_quality_score_one_aoi(
+    aoi_id: str,
+    aoi_quality_dir: Path,
+) -> dict[str, float]:
+    qscore_city = dict(aoi_id=aoi_id)
+
+    with open(aoi_quality_dir / "map_saturation_all.json", "r") as qf:
+        qscore_per_category = json.load(qf)
+
+    for category, qscore in qscore_per_category.items():
+        qscore_city[f"{category}"] = qscore["value"]
+
+    return qscore_city
+
+
+def merge_scores_to_geom(
+    aggregated_scores: list[dict],
+    aois: gpd.GeoDataFrame,
+    aoi_id_col: str,
+) -> gpd.GeoDataFrame:
+    aggregated_scores = pd.DataFrame(aggregated_scores).rename(
+        columns={"aoi_id": aoi_id_col}
+    )
+    return aois.merge(aggregated_scores, on=aoi_id_col, how="left")
 
 
 if __name__ == "__main__":
