@@ -14,6 +14,52 @@ from analysis.data_quality.utils import country_map, style_map
 from xmin_core.utils.configure import initialize_configs
 
 
+def calc_total_correlation(
+    configs: DictConfig,
+    total_score_descriptor: Path,
+    data_quality_score_descriptor: Path,
+    output_dir: Path,
+):
+    data_quality_scores = gpd.read_file(data_quality_score_descriptor)
+    total_access_scores = gpd.read_file(total_score_descriptor)
+
+    scores_both = data_quality_scores.merge(
+        total_access_scores,
+        on="URAU_CODE",
+        how="left",
+    )
+    scores_both["country"] = scores_both["URAU_CODE"].str[:2].map(country_map)
+
+    for mode, time in itertools.product(configs.mode_speeds, configs.xmin_timeframes):
+        scores_both_mode_time = scores_both[
+            ["URAU_CODE", "country", "total", f"{mode}_{time}min"]
+        ]
+        scores_both_mode_time = scores_both_mode_time.rename(
+            columns={"total": "overall_quality", f"{mode}_{time}min": "overall_access"}
+        )
+
+        fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+
+        calc_correlation(
+            category_name="overall",
+            category_both_scores=scores_both_mode_time,
+            ax=ax,
+        )
+
+        handles, labels = ax.get_legend_handles_labels()
+        fig.legend(
+            handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, 0.005)
+        )
+
+        plt.tight_layout(rect=[0, 0.05, 1, 1])
+        plt.savefig(
+            output_dir / "overall" / f"{mode}_{time}min_scatter_grid.png",
+            dpi=300,
+            bbox_inches="tight",
+        )
+        plt.close()
+
+
 def calc_category_correlations(
     configs: DictConfig,
     category_access_score_dir_descriptor: Path,
@@ -62,7 +108,7 @@ def calc_category_correlations(
 
         plt.tight_layout(rect=[0, 0.05, 1, 1])
         plt.savefig(
-            output_dir / f"{mode}_{time}min_scatter_grid_by_class.png",
+            output_dir / "categories" / f"{mode}_{time}min_scatter_grid_by_class.png",
             dpi=300,
             bbox_inches="tight",
         )
@@ -127,11 +173,15 @@ if __name__ == "__main__":
     )
     output_dir = Path("experiments/result_analysis")
 
+    total_access_score_file = result_root_dir / "all_city_scores.gpkg"
     category_access_score_dir = result_root_dir.parent / "aggregated_category_scores"
     data_quality_score_file = result_root_dir / "all_city_quality_scores.gpkg"
 
     configs = initialize_configs(config_file)
 
-    calc_category_correlations(
-        configs, category_access_score_dir, data_quality_score_file, output_dir
+    calc_total_correlation(
+        configs, total_access_score_file, data_quality_score_file, output_dir
     )
+    # calc_category_correlations(
+    #     configs, category_access_score_dir, data_quality_score_file, output_dir
+    # )
