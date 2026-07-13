@@ -50,6 +50,8 @@ def calc_total_correlation(
         fig.legend(
             handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, 0.005)
         )
+        fig.supxlabel("Map saturation score", y=0.07, fontsize=11)
+        fig.supylabel("Accessibility score", fontsize=11)
 
         plt.tight_layout(rect=[0, 0.05, 1, 1])
         plt.savefig(
@@ -84,7 +86,7 @@ def calc_category_correlations(
         )
         scores_both["country"] = scores_both["URAU_CODE"].str[:2].map(country_map)
 
-        fig, axes = plt.subplots(3, 3, figsize=(15, 15))
+        fig, axes = plt.subplots(3, 3, figsize=(15, 15), sharex=True, sharey=True)
         axes = axes.flatten()
 
         for ci, category in enumerate(categories):
@@ -105,6 +107,8 @@ def calc_category_correlations(
         fig.legend(
             handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, 0.005)
         )
+        fig.supxlabel("Map saturation score", y=0.07, fontsize=11)
+        fig.supylabel("Accessibility score", fontsize=11)
 
         plt.tight_layout(rect=[0, 0.05, 1, 1])
         plt.savefig(
@@ -129,7 +133,8 @@ def calc_correlation(
     valid = ~np.isnan(x) & ~np.isnan(y)
     x_valid, y_valid = x[valid], y[valid]
     slope, intercept, r_value, p_value, std_err = stats.linregress(x_valid, y_valid)
-    line_x = np.linspace(x.min(), x.max(), 100)
+    # line_x = np.linspace(x.min(), x.max(), 100)
+    line_x = np.linspace(0, 100, 100)
     line_y = slope * line_x + intercept
 
     # 3. Plot
@@ -156,14 +161,11 @@ def calc_correlation(
         reg_label = "Regression: n/a"
 
     ax.set_title(f"{category_name} ({reg_label})", fontsize=9)
-    ax.set_xlabel("Map saturation score")
-    ax.set_ylabel("Accessibility score")
+    # ax.set_xlabel("Map saturation score")
+    # ax.set_ylabel("Accessibility score")
 
-    # plt.legend()
-    # plt.tight_layout()
-    # plt.show()
-    #
-    # print("done.")
+    ax.set_xlim(0, 100)
+    ax.set_ylim(0, 100)
 
 
 if __name__ == "__main__":
@@ -182,6 +184,6 @@ if __name__ == "__main__":
     calc_total_correlation(
         configs, total_access_score_file, data_quality_score_file, output_dir
     )
-    # calc_category_correlations(
-    #     configs, category_access_score_dir, data_quality_score_file, output_dir
-    # )
+    calc_category_correlations(
+        configs, category_access_score_dir, data_quality_score_file, output_dir
+    )
