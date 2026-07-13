@@ -224,7 +224,7 @@ def draw_bar_plot_per_category_per_country(
     for ax in g_bar.axes.flat:
         for container in ax.containers:
             ax.bar_label(container, fmt="%.1f", padding=2)
-    g_bar.savefig(output_dir / "bar_per_category.png", dpi=150)
+    g_bar.savefig(output_dir / "bar_per_category.png", dpi=300)
     plt.close()
 
 
