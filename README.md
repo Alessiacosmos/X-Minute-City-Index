@@ -1,46 +1,80 @@
 # X-Minute-City Composite Index
 
-Create your own accessibility analysis for your city and needs!
+Reproductive accessibility scoring tool for your area of interest (AOI).
 Forked and improved based on https://github.com/MilenaLang/X-Minute-City-Index.
-
-This repository is used to calculate an accessibility index for x-minute city analysis.
 
 
 ## Relevance
 The 15-minute city concept envisions access to all essential services within a 15-minute walk or bike ride.
 
-As accessibility is not equal throughout a city or across cities, a tool to measure pedestrian accessibility is necessary for urban planners and stakeholders to implement the concept.
-Existing indices often lack timeframe-adaptability and sufficiency by assuming uniform service needs and POI categories.
-Thus, this composite index includes the adaptable timeframe of the x-minute city & support editable POI category settings.
+As accessibility is not equal throughout a city or across cities,
+a tool to measure active accessibility (active means active mobility) is necessary for urban planners and stakeholders to implement the concept.
+Existing indices often lack time threshold-adaptability and sufficiency by assuming uniform service needs and POI categories.
+Thus, this composite index includes the adaptable travel mode and time threshold of the x-minute city & support editable POI category settings.
 
 ## Methodology
-The script uses open-source OpenStreetmap (OSM) Points of Interest (POIs) for amenities and GHSL population data for population density.
-POIs for multi categories are fetched via [ohsome API](https://github.com/giscience/ohsome-api) and cleaned for routing.
-Small neighborhood units are represented as [h3](https://h3geo.org) hexagonal grid cells of approximately 1km x 1km and filtered to habited areas.
-Walking time matrices are generated using [openrouteservice (ORS)](https://openrouteservice.org/) with manual speed adjustments for different mobility mode.
+The tool follows hexagon-based accessibility scoring method. In detail,
+an AOI is firstly gridded as hexagons ([h3](https://h3geo.org)) of approximately 1km x 1km;
+then, its Point of Interests (POIs) for multi categories are fetched through [ohsome API](https://github.com/giscience/ohsome-api).
+Subsequently, the accessibility score of each hexagon is calculated based on the aggregated POI features (count/area ratio with weights) in its corresponding isochrones ([openrouteservice (ORS)](https://openrouteservice.org/)),
+where the isochrone is calculated based on specified travel mode and time threshold.
+City-level score is calculated based on accessibility scores across hexagons and weighted by population.
 
-The time matrices are calculated by isochrones of hexagons.
-The final index score is the population-weighted sum of normalized scores across categories.
-
+### Data sources
+1. POI data: [OpenStreetMap](https://www.openstreetmap.org/)
+2. Population data: [GHS-POP dataset](https://data.jrc.ec.europa.eu/dataset/2ff68a52-5b5b-4a22-8f40-c41da8332cfe)
 
 ## Usage
-The repository now is managed by uv.
+The repository is managed by uv.
 
-1. Fork and clone the repository
-2. Init your uv, activate venv and do sync.
-2. Set `.env` file (please copy `.env_template` and rename it as `.env`) to access to HeiGIT population data bucket and ORS service.
-3. Run the following command:
+1. Fork and clone the repository, and install uv following https://docs.astral.sh/uv/getting-started/installation/
+2. Install it by running the following command
 ```shell
-# Option 1: you have a vector layer including a series of AOIs you want to analyse
-#$ uv run xmin_core/cli.py --aoi_descriptor test/test_data/test_aoi_xmin.geojson  --config_descriptor configs/default.yaml --output_dir experiments/test_aoi/
+$ uv sync # --extra dev
+```
+3. Set `.env` file (please copy `.env_template` and rename it as `.env`) to access to HeiGIT population data bucket and ORS service.
+4. Run the following command:
+```shell
+# You have a vector layer including a series of AOIs you want to analyse accessibility
 $ uv run xmin_core/cli.py --aoi_descriptor resources/explored_cities.gpkg --aoi_id_col URAU_CODE --config_descriptor configs/default.yaml --output_dir experiments/test_aoi/
 
-# Option 2: you want to do analysis for a city with given city name
-$ uv run python xmin_core/main_xmin.py --city Heidelberg --config configs/default.yaml
-
-# Option 3 if you want to do analysis following ghsl settlement data, I prepared a spefical script for you
-$ uv run xmin_core/main_xmin_urcls.py --config configs/default.yaml --output_dir experiments/urcls/
+# Scoring accessibility plus data quality by mapping saturation
+$ uv run xmin_core/cli.py --aoi_descriptor resources/explored_cities.gpkg --aoi_id_col URAU_CODE --config_descriptor configs/default.yaml --output_dir experiments/test_aoi/ --activated_funcs=['accessibility', 'quality'] --quality_indicators=['map_saturation']
 ```
+
+### Configuration based on your needs
+The following parameters are configurable:
+1. travel modes
+2. travel time thresholds
+3. analysis resolution
+4. all POI settings (categories, weights, and benchmarks)
+
+*How to*
+To cutomize these configs, create your own `config.yaml` file under `configs` folder (e.g. *default.yaml*)
+Parameters 1-3 can easily and directly configure at the yaml file, while the 4 (POI settings) are a little bit more complex.
+
+*How to configure your own POI settings*
+1. create a POI setting file at `xmin_core/poi_categories` (e.g. naming it as `<your_POI_config_file>.py`)
+2. customize your settings as a class (e.g. `class <your_POI_config_class>`), including categories, and category weights and benchmarks. (reference: *two_levels.py* v.s. *sp_healthcare.py*)
+3. register the new class at `xmin_core/poi_categories/__init__.py`
+```python
+# example
+from xmin_core.poi_categories.<your_POI_config_file> import <your_POI_config_class>
+
+category_settings = {
+    "simple": SimpleFacilitiesCategories,
+    "two_level": TwoLvlFacilitiesCategories,
+    "healthcare_de": DEHealthCareCategories,
+    "healthcare_nl": NLHealthCareCategories,
+    "healthcare_es": ESHealthCareCategories,
+    ###### --- yours new setting ----------------------
+    "<your_POI_setting_register_name>": <your_POI_config_class>
+    ###### --- yours new setting ----------------------
+
+}
+```
+4. use the registered new POI settings at `config.yaml` (`<your_POI_setting_register_name>`)
+
 
 ## Useful Tools
 Under `tools/` folder, you can find some useful tools to prepare your data for the analysis, such as:
@@ -60,6 +94,9 @@ In such case, these hexagons will be skipped and the failed hexagon id will be s
 
 ## Acknowledgement
 This code is evolved from the original work of Milena Bremer [X-Minute-City-Index](https://github.com/MilenaLang/X-Minute-City-Index)
+
+## License
+[GNU v3](LICENSE)
 
 ## Author
 [HeiGIT](https://heigit.org/)
