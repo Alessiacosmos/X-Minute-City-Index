@@ -49,11 +49,13 @@ The following parameters are configurable:
 3. analysis resolution
 4. all POI settings (categories, weights, and benchmarks)
 
-*How to*
+***How to***
+
 To cutomize these configs, create your own `config.yaml` file under `configs` folder (e.g. *default.yaml*)
 Parameters 1-3 can easily and directly configure at the yaml file, while the 4 (POI settings) are a little bit more complex.
 
-*How to configure your own POI settings*
+***How to configure your own POI settings***
+
 1. create a POI setting file at `xmin_core/poi_categories` (e.g. naming it as `<your_POI_config_file>.py`)
 2. customize your settings as a class (e.g. `class <your_POI_config_class>`), including categories, and category weights and benchmarks. (reference: *two_levels.py* v.s. *sp_healthcare.py*)
 3. register the new class at `xmin_core/poi_categories/__init__.py`
@@ -67,9 +69,9 @@ category_settings = {
     "healthcare_de": DEHealthCareCategories,
     "healthcare_nl": NLHealthCareCategories,
     "healthcare_es": ESHealthCareCategories,
-    ###### --- yours new setting ----------------------
+    ###### --- your new setting ----------------------
     "<your_POI_setting_register_name>": <your_POI_config_class>
-    ###### --- yours new setting ----------------------
+    ###### --- your new setting ----------------------
 
 }
 ```
