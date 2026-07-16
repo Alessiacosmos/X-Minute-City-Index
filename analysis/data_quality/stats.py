@@ -65,13 +65,13 @@ def draw_boxplots_per_category_per_country(
         id_vars="Country",
         value_vars=categories,
         var_name="Category",
-        value_name="Map saturation score",
+        value_name="Mapping saturation score",
     )
 
     g = sns.catplot(
         data=melted[melted["Category"] != "total"],
         x="Country",
-        y="Map saturation score",
+        y="Mapping saturation score",
         col="Category",
         kind="box",
         col_wrap=3,
@@ -88,13 +88,13 @@ def draw_boxplots_per_category_per_country(
     sns.boxplot(
         data=melted[melted["Category"] == "total"],
         x="Country",
-        y="Map saturation score",
+        y="Mapping saturation score",
         hue="Country",
         palette={country: styles["color"] for country, styles in style_map.items()},
         legend=False,
     )
     plt.xlabel("Country")
-    plt.ylabel("Map Saturation score")
+    plt.ylabel("Mapping Saturation score")
     plt.tight_layout()
     plt.ylim(50, 100)
     plt.savefig(output_dir / "boxplots_total_country.png", dpi=300)
@@ -113,7 +113,7 @@ def draw_hist_total_score_per_country(qscores: gpd.GeoDataFrame, output_dir: Pat
         common_norm=False,
         palette={country: styles["color"] for country, styles in style_map.items()},
     )
-    plt.title("Overall map saturation score distribution by country")
+    plt.title("Overall mapping saturation score distribution by country")
     plt.tight_layout()
     plt.savefig(output_dir / "histogram_total_country.png", dpi=300)
     plt.close()
@@ -145,9 +145,9 @@ def draw_score_ranking(
         color=colors,
     )
     ax.invert_yaxis()  # highest score at top
-    ax.set_xlabel("Total map saturation score")
+    ax.set_xlabel("Total mapping saturation score")
     ax.set_title(
-        f"Top {rank_num} and Bottom {rank_num} cities by total map saturation score"
+        f"Top {rank_num} and Bottom {rank_num} cities by total mapping saturation score"
     )
     ax.bar_label(bars, fmt="%.1f", padding=3)
 
@@ -183,7 +183,7 @@ def draw_heatmap_category_country(country_cat_matrix: pd.DataFrame, output_dir: 
     )
     plt.xticks(rotation=30, ha="right")  # Rotates category names 45 degrees
     plt.yticks(rotation=0)
-    plt.title("Average map saturation score by country and category")
+    plt.title("Average mapping saturation score by country and category")
     plt.xlabel("Category")
     plt.ylabel("Country")
     plt.tight_layout()
@@ -197,10 +197,10 @@ def draw_bar_plot_per_category_per_country(
     # NOTE: duplicated of the heatmap, so won't draw it.
     # Grouped bar chart: average score per category, grouped by country
     plot_df = country_cat_matrix.reset_index().melt(
-        id_vars="Country", var_name="Category", value_name="Map saturation score"
+        id_vars="Country", var_name="Category", value_name="Mapping saturation score"
     )
     plt.figure(figsize=(10, 5))
-    sns.barplot(data=plot_df, x="Category", y="Map saturation score", hue="Country")
+    sns.barplot(data=plot_df, x="Category", y="Mapping saturation score", hue="Country")
     plt.title("Average Data Quality Score per Category by Country")
     plt.xticks(rotation=45, ha="right")
     plt.tight_layout()
@@ -211,7 +211,7 @@ def draw_bar_plot_per_category_per_country(
     g_bar = sns.catplot(
         data=plot_df,
         x="Country",
-        y="Map saturation score",
+        y="Mapping saturation score",
         col="Category",
         kind="bar",
         col_wrap=3,
@@ -219,7 +219,9 @@ def draw_bar_plot_per_category_per_country(
         sharey=False,
         palette="Set2",
     )
-    g_bar.fig.suptitle("Average map saturation score by country per category", y=1.02)
+    g_bar.fig.suptitle(
+        "Average mapping saturation score by country per category", y=1.02
+    )
     g_bar.set_titles("{col_name}")
     for ax in g_bar.axes.flat:
         for container in ax.containers:

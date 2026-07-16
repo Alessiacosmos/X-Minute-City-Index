@@ -50,7 +50,7 @@ def calc_total_correlation(
         fig.legend(
             handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, 0.005)
         )
-        fig.supxlabel("Map saturation score", y=0.07, fontsize=11)
+        fig.supxlabel("Mapping saturation score", y=0.07, fontsize=11)
         fig.supylabel("Accessibility score", fontsize=11)
 
         plt.tight_layout(rect=[0, 0.05, 1, 1])
@@ -107,7 +107,7 @@ def calc_category_correlations(
         fig.legend(
             handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, 0.005)
         )
-        fig.supxlabel("Map saturation score", y=0.07, fontsize=11)
+        fig.supxlabel("Mapping saturation score", y=0.07, fontsize=11)
         fig.supylabel("Accessibility score", fontsize=11)
 
         plt.tight_layout(rect=[0, 0.05, 1, 1])
@@ -161,7 +161,7 @@ def calc_correlation(
         reg_label = "Regression: n/a"
 
     ax.set_title(f"{category_name} ({reg_label})", fontsize=9)
-    # ax.set_xlabel("Map saturation score")
+    # ax.set_xlabel("Mapping saturation score")
     # ax.set_ylabel("Accessibility score")
 
     ax.set_xlim(0, 100)
