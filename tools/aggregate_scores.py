@@ -83,7 +83,7 @@ def aggregate_city_info(
     # save poi counts
     aggregated_poi_cnts = merge_scores_to_geom(aggregated_poi_cnts, aois, aoi_id_col)
 
-    aggregated_poi_cnts.to_file(score_root_dir / "aggregated_poi_cnts.gpkg")
+    aggregated_poi_cnts.to_file(score_root_dir / "all_city_poi_cnts.gpkg")
 
     # save accessibility and quality scores
     aoi_accessibility_scores = merge_scores_to_geom(
