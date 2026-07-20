@@ -10,14 +10,14 @@ from tqdm import tqdm
 from xmin_core.utils.configure import initialize_configs
 
 
-def aggregate_city_scores(
+def aggregate_city_info(
     aoi_descriptor: Path,
     config_descriptor: Path,
     score_root_dir: Path,
     aoi_id_col: str = None,
 ):
     """
-    Aggregate the scores of all AOIs in a city and save the results to score_root_dir.
+    Aggregate the scores / poi numbers of all AOIs in a city and save the results to score_root_dir.
     :param aoi_descriptor: Areas of interest descriptor (*.geojson, *.gpkg, *.shp)
     :param config_descriptor: configs used to specify the settings for the index calculation,
                               including POI categories, timeframes, mode speeds, etc.
@@ -38,7 +38,8 @@ def aggregate_city_scores(
         for category in configs.poi_setting
     }
 
-    # Initialize an empty DataFrame to hold aggregated scores
+    # Initialize an empty DataFrame to hold aggregated info (poi counts / scores)
+    aggregated_poi_cnts = []
     aggregated_accessibility_scores = []
     aggregated_quality_scores = []
     category_scores = []
@@ -48,6 +49,15 @@ def aggregate_city_scores(
 
         aoi_id = aoi[aoi_id_col].values[0] if aoi_id_col in aoi.columns else idx
 
+        # poi number
+        poi_count_city = count_poi_number_one_aoi(
+            aoi_id=aoi_id,
+            categories=list(categories.keys()),
+            aoi_poi_dir=score_root_dir / aoi_id / "pois",
+        )
+        aggregated_poi_cnts.append(poi_count_city)
+
+        # socre-related
         score_city = extract_accessibility_score_one_aoi(
             aoi_id=aoi_id,
             aoi_score_dir=score_root_dir / aoi_id / "scores",
@@ -69,6 +79,11 @@ def aggregate_city_scores(
         aggregated_accessibility_scores.append(score_city)
         aggregated_quality_scores.append(qscore_city)
         category_scores.extend(category_scores_city)
+
+    # save poi counts
+    aggregated_poi_cnts = merge_scores_to_geom(aggregated_poi_cnts, aois, aoi_id_col)
+
+    aggregated_poi_cnts.to_file(score_root_dir / "aggregated_poi_cnts.gpkg")
 
     # save accessibility and quality scores
     aoi_accessibility_scores = merge_scores_to_geom(
@@ -95,6 +110,24 @@ def aggregate_city_scores(
         aoi_id_col=aoi_id_col,
         output_dir=score_root_dir.parent / "aggregated_category_scores",
     )
+
+
+def count_poi_number_one_aoi(
+    aoi_id: str,
+    categories: list[str],
+    aoi_poi_dir: Path,
+) -> dict[str, float]:
+    poi_count_city = dict(aoi_id=aoi_id)
+
+    total_poi_count = 0
+    for category in categories:
+        pois_category = gpd.read_file(aoi_poi_dir / f"pois_pts_{category}.gpkg")
+        poi_count_city[category] = len(pois_category)
+        total_poi_count += len(pois_category)
+
+    poi_count_city["total"] = total_poi_count
+
+    return poi_count_city
 
 
 def extract_accessibility_score_one_aoi(
@@ -204,4 +237,4 @@ def save_category_scores_by_mode_time(
 
 
 if __name__ == "__main__":
-    auto_cli(aggregate_city_scores, as_positional=False)
+    auto_cli(aggregate_city_info, as_positional=False)
