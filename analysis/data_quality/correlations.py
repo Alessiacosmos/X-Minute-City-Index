@@ -119,14 +119,99 @@ def calc_category_correlations(
         plt.close()
 
 
+def calc_corrlation_poi_cnt(
+    configs: DictConfig,
+    total_poi_cnt_descriptor: Path,
+    data_quality_score_descriptor: Path,
+    output_dir: Path,
+):
+    categories = [category.name for category in configs.poi_setting]
+
+    data_quality_scores = gpd.read_file(data_quality_score_descriptor)
+    total_poi_cnts = gpd.read_file(total_poi_cnt_descriptor)
+
+    scores_cnts = data_quality_scores.merge(
+        total_poi_cnts,
+        on="URAU_CODE",
+        how="left",
+        suffixes=("_quality", "_poi_count"),
+    )
+    scores_cnts["country"] = scores_cnts["URAU_CODE"].str[:2].map(country_map)
+    scores_cnts = scores_cnts.rename(
+        columns={
+            "total_quality": "overall_quality",
+            "total_poi_count": "overall_poi_count",
+        }
+    )
+
+    # total correlation
+    fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+
+    calc_correlation(
+        category_name="overall",
+        category_both_scores=scores_cnts,
+        ax=ax,
+        x_suffix="poi_count",
+        y_suffix="quality",
+    )
+
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, 0.005))
+    fig.supxlabel("POI count", y=0.07, fontsize=11)
+    fig.supylabel("Mapping saturation score", fontsize=11)
+
+    plt.tight_layout(rect=[0, 0.05, 1, 1])
+    plt.savefig(
+        output_dir / "overall" / "poi_count_scatter_grid.png",
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close()
+
+    # per category
+    fig, axes = plt.subplots(3, 3, figsize=(15, 15), sharex=True, sharey=True)
+    axes = axes.flatten()
+
+    for ci, category in enumerate(categories):
+        calc_correlation(
+            category_name=category,
+            category_both_scores=scores_cnts[
+                [
+                    "URAU_CODE",
+                    "country",
+                    f"{category}_quality",
+                    f"{category}_poi_count",
+                ]
+            ],
+            ax=axes[ci],
+            x_suffix="poi_count",
+            y_suffix="quality",
+        )
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, 0.005))
+    fig.supxlabel("POI count", y=0.07, fontsize=11)
+    fig.supylabel("Mapping saturation score", fontsize=11)
+
+    plt.tight_layout(rect=[0, 0.05, 1, 1])
+    plt.savefig(
+        output_dir / "categories" / "poi_count_scatter_grid_by_class.png",
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close()
+
+
 def calc_correlation(
     category_name: str,
     category_both_scores: pd.DataFrame,
     ax: plt.Axes,
+    x_suffix: str = "quality",
+    y_suffix: str = "access",
 ):
     x, y = (
-        category_both_scores[f"{category_name}_quality"],
-        category_both_scores[f"{category_name}_access"],
+        category_both_scores[f"{category_name}_{x_suffix}"],
+        category_both_scores[f"{category_name}_{y_suffix}"],
     )
 
     # regression
@@ -134,7 +219,10 @@ def calc_correlation(
     x_valid, y_valid = x[valid], y[valid]
     slope, intercept, r_value, p_value, std_err = stats.linregress(x_valid, y_valid)
     # line_x = np.linspace(x.min(), x.max(), 100)
-    line_x = np.linspace(0, 100, 100)
+    if x_suffix == "quality":
+        line_x = np.linspace(0, 100, 100)
+    else:
+        np.linspace(x.min(), x.max(), 100)
     line_y = slope * line_x + intercept
 
     # 3. Plot
@@ -142,8 +230,8 @@ def calc_correlation(
     for country, style in style_map.items():
         pts = category_both_scores[category_both_scores["country"] == country]
         ax.scatter(
-            pts[f"{category_name}_quality"],
-            pts[f"{category_name}_access"],
+            pts[f"{category_name}_{x_suffix}"],
+            pts[f"{category_name}_{y_suffix}"],
             color=style["color"],
             marker=style["marker"],
             edgecolor="black",
@@ -161,11 +249,13 @@ def calc_correlation(
         reg_label = "Regression: n/a"
 
     ax.set_title(f"{category_name} ({reg_label})", fontsize=9)
-    # ax.set_xlabel("Mapping saturation score")
-    # ax.set_ylabel("Accessibility score")
 
-    ax.set_xlim(0, 100)
-    ax.set_ylim(0, 100)
+    ax.set_xlim(0, 100) if x_suffix in ["access", "quality"] else ax.set_xlim(
+        x.min(), x.max()
+    )
+    ax.set_ylim(0, 100) if y_suffix in ["access", "quality"] else ax.set_ylim(
+        y.min(), y.max()
+    )
 
 
 if __name__ == "__main__":
@@ -175,6 +265,7 @@ if __name__ == "__main__":
     )
     output_dir = Path("experiments/result_analysis")
 
+    poi_cnt_file = result_root_dir / "all_city_poi_cnts.gpkg"
     total_access_score_file = result_root_dir / "all_city_scores.gpkg"
     category_access_score_dir = result_root_dir.parent / "aggregated_category_scores"
     data_quality_score_file = result_root_dir / "all_city_quality_scores.gpkg"
@@ -187,3 +278,4 @@ if __name__ == "__main__":
     calc_category_correlations(
         configs, category_access_score_dir, data_quality_score_file, output_dir
     )
+    calc_corrlation_poi_cnt(configs, poi_cnt_file, data_quality_score_file, output_dir)
