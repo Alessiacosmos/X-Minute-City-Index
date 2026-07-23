@@ -7,6 +7,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from matplotlib.ticker import FixedLocator, FixedFormatter
 
 from omegaconf import DictConfig
 from scipy import stats
@@ -133,6 +134,56 @@ def calc_category_correlations(
             bbox_inches="tight",
         )
         plt.close()
+
+
+def calc_correlation_pop_size(
+    configs: DictConfig,
+    city_population_descriptor: Path,
+    data_quality_score_descriptor: Path,
+    output_dir: Path,
+):
+    nice_ticks_real_total = [50, 100, 200, 500, 1000, 2000, 5000]
+
+    data_quality_scores = gpd.read_file(data_quality_score_descriptor)
+
+    city_populations = pd.read_csv(city_population_descriptor, header=0)
+    city_populations["population"] = np.log10(city_populations["population"] / 1000)
+
+    qscores_w_pop = data_quality_scores.merge(
+        city_populations,
+        on="URAU_CODE",
+        how="left",
+    )
+    qscores_w_pop["country"] = qscores_w_pop["URAU_CODE"].str[:2].map(country_map)
+
+    qscores_w_pop = qscores_w_pop[["URAU_CODE", "country", "population", "total"]]
+    qscores_w_pop = qscores_w_pop.rename(
+        columns={"total": "overall mapping saturation"}
+    )
+
+    fig, ax = plt.subplots(1, 1, figsize=(9, 7))
+
+    calc_correlation_accessibility_anal(
+        category_name="overall mapping saturation",
+        category_both_scores=qscores_w_pop,
+        ax=ax,
+        nice_ticks_real=nice_ticks_real_total,
+    )  # todo: move calc_correlation for quality and accessibility to independent script after merging this and anal_accessibility branch
+
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles, labels, loc="lower right")
+    fig.supxlabel(
+        "Population size (thousands of people, log scale)", y=0.07, fontsize=11
+    )
+    fig.supylabel("Mapping saturation", fontsize=11)
+
+    plt.tight_layout(rect=[0, 0.05, 1, 1])
+    plt.savefig(
+        output_dir / "overall" / "pop_vs_map_saturation_logxaxis.png",
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close()
 
 
 def calc_corrlation_poi_cnt(
@@ -277,6 +328,71 @@ def calc_correlation(
     )
 
 
+def calc_correlation_accessibility_anal(
+    category_name: str,
+    category_both_scores: pd.DataFrame,
+    ax: plt.Axes,
+    nice_ticks_real: list[int],
+):
+    x = category_both_scores["population"]
+
+    # regression
+    x_range = x.max() - x.min()
+    x_min, x_max = x.min() - x_range * 0.05, x.max() + x_range * 0.05
+
+    line_x = np.linspace(x_min, x_max, 100)
+
+    # 3. Plot
+    # scatter points, colored/shaped by country
+    for country, style in style_map.items():
+        pts = category_both_scores[category_both_scores["country"] == country]
+        country_x, country_y = pts["population"], pts[f"{category_name}"]
+        ax.scatter(
+            country_x,
+            country_y,
+            color=style["color"],
+            marker=style["marker"],
+            edgecolor="black",
+            linewidth=0.3,
+            alpha=0.8,
+            s=50,
+            label=country,
+        )
+
+        # regression line
+        country_valid = ~np.isnan(country_x) & ~np.isnan(country_y)
+        country_x_valid, country_y_valid = (
+            country_x[country_valid],
+            country_y[country_valid],
+        )
+        slope, intercept, r_value, p_value, std_err = stats.linregress(
+            country_x_valid, country_y_valid
+        )
+        line_y = slope * line_x + intercept
+
+        if not np.isnan(slope):
+            linestyle = "-" if p_value < 0.05 else "--"
+            ax.plot(
+                line_x, line_y, color=style["color"], linestyle=linestyle, linewidth=1.5
+            )
+
+    ax.set_title(f"{category_name}", fontsize=12)
+
+    ax.set_xlim(x_min, x_max)
+
+    # keep only ticks within the actual data range, to avoid clutter/out-of-range labels
+    nice_ticks_real = [v for v in nice_ticks_real if x_min <= np.log10(v) <= x_max]
+
+    # convert to log10(thousands) coordinate space to match your transformed x
+    tick_positions = [np.log10(v) for v in nice_ticks_real]
+    tick_labels = [f"{v:,.0f}" for v in nice_ticks_real]
+
+    ax.xaxis.set_major_locator(FixedLocator(tick_positions))
+    ax.xaxis.set_major_formatter(FixedFormatter(tick_labels))
+
+    ax.set_ylim(0, 100)
+
+
 if __name__ == "__main__":
     config_file = "configs/default.yaml"
     result_root_dir = Path(
@@ -285,16 +401,21 @@ if __name__ == "__main__":
     output_dir = Path("experiments/result_analysis/data_quality")
 
     poi_cnt_file = result_root_dir / "all_city_poi_cnts.gpkg"
+    city_population_file = result_root_dir.parent / "cities_with_population.csv"
+
     total_access_score_file = result_root_dir / "all_city_scores.gpkg"
     category_access_score_dir = result_root_dir.parent / "aggregated_category_scores"
     data_quality_score_file = result_root_dir / "all_city_quality_scores.gpkg"
 
     configs = initialize_configs(config_file)
 
-    calc_total_correlation(
-        configs, total_access_score_file, data_quality_score_file, output_dir
+    # calc_total_correlation(
+    #     configs, total_access_score_file, data_quality_score_file, output_dir
+    # )
+    # calc_category_correlations(
+    #     configs, category_access_score_dir, data_quality_score_file, output_dir
+    # )
+    calc_correlation_pop_size(
+        configs, city_population_file, data_quality_score_file, output_dir
     )
-    calc_category_correlations(
-        configs, category_access_score_dir, data_quality_score_file, output_dir
-    )
-    calc_corrlation_poi_cnt(configs, poi_cnt_file, data_quality_score_file, output_dir)
+    # calc_corrlation_poi_cnt(configs, poi_cnt_file, data_quality_score_file, output_dir)
