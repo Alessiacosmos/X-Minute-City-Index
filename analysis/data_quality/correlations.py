@@ -38,7 +38,7 @@ def calc_total_correlation(
             columns={"total": "overall_quality", f"{mode}_{time}min": "overall_access"}
         )
 
-        fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+        fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 
         calc_correlation(
             category_name="overall",
@@ -47,9 +47,7 @@ def calc_total_correlation(
         )
 
         handles, labels = ax.get_legend_handles_labels()
-        fig.legend(
-            handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, 0.005)
-        )
+        ax.legend(handles, labels, loc="upper left")
         fig.supxlabel("Mapping saturation score", y=0.07, fontsize=11)
         fig.supylabel("Accessibility score", fontsize=11)
 
@@ -129,6 +127,9 @@ def calc_corrlation_poi_cnt(
 
     data_quality_scores = gpd.read_file(data_quality_score_descriptor)
     total_poi_cnts = gpd.read_file(total_poi_cnt_descriptor)
+    total_poi_cnts[categories + ["total"]] = np.log(
+        total_poi_cnts[categories + ["total"]] / 100
+    )
 
     scores_cnts = data_quality_scores.merge(
         total_poi_cnts,
@@ -156,50 +157,50 @@ def calc_corrlation_poi_cnt(
     )
 
     handles, labels = ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, 0.005))
-    fig.supxlabel("POI count", y=0.07, fontsize=11)
+    ax.legend(handles, labels, loc="lower right")
+    fig.supxlabel("POI count (hundred POIs, log scale)", y=0.07, fontsize=11)
     fig.supylabel("Mapping saturation score", fontsize=11)
 
     plt.tight_layout(rect=[0, 0.05, 1, 1])
     plt.savefig(
-        output_dir / "overall" / "poi_count_scatter_grid.png",
+        output_dir / "overall" / "poi_count_scatter_grid_hlog.png",
         dpi=300,
         bbox_inches="tight",
     )
     plt.close()
 
-    # per category
-    fig, axes = plt.subplots(3, 3, figsize=(15, 15), sharex=True, sharey=True)
-    axes = axes.flatten()
-
-    for ci, category in enumerate(categories):
-        calc_correlation(
-            category_name=category,
-            category_both_scores=scores_cnts[
-                [
-                    "URAU_CODE",
-                    "country",
-                    f"{category}_quality",
-                    f"{category}_poi_count",
-                ]
-            ],
-            ax=axes[ci],
-            x_suffix="poi_count",
-            y_suffix="quality",
-        )
-
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, 0.005))
-    fig.supxlabel("POI count", y=0.07, fontsize=11)
-    fig.supylabel("Mapping saturation score", fontsize=11)
-
-    plt.tight_layout(rect=[0, 0.05, 1, 1])
-    plt.savefig(
-        output_dir / "categories" / "poi_count_scatter_grid_by_class.png",
-        dpi=300,
-        bbox_inches="tight",
-    )
-    plt.close()
+    # # per category
+    # fig, axes = plt.subplots(3, 3, figsize=(15, 15), sharex=True, sharey=True)
+    # axes = axes.flatten()
+    #
+    # for ci, category in enumerate(categories):
+    #     calc_correlation(
+    #         category_name=category,
+    #         category_both_scores=scores_cnts[
+    #             [
+    #                 "URAU_CODE",
+    #                 "country",
+    #                 f"{category}_quality",
+    #                 f"{category}_poi_count",
+    #             ]
+    #         ],
+    #         ax=axes[ci],
+    #         x_suffix="poi_count",
+    #         y_suffix="quality",
+    #     )
+    #
+    # handles, labels = axes[0].get_legend_handles_labels()
+    # fig.legend(handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, 0.005))
+    # fig.supxlabel("POI count", y=0.07, fontsize=11)
+    # fig.supylabel("Mapping saturation score", fontsize=11)
+    #
+    # plt.tight_layout(rect=[0, 0.05, 1, 1])
+    # plt.savefig(
+    #     output_dir / "categories" / "poi_count_scatter_grid_by_class.png",
+    #     dpi=300,
+    #     bbox_inches="tight",
+    # )
+    # plt.close()
 
 
 def calc_correlation(
@@ -222,7 +223,7 @@ def calc_correlation(
     if x_suffix == "quality":
         line_x = np.linspace(0, 100, 100)
     else:
-        np.linspace(x.min(), x.max(), 100)
+        line_x = np.linspace(x.min(), x.max(), 100)
     line_y = slope * line_x + intercept
 
     # 3. Plot
@@ -272,10 +273,10 @@ if __name__ == "__main__":
 
     configs = initialize_configs(config_file)
 
-    calc_total_correlation(
-        configs, total_access_score_file, data_quality_score_file, output_dir
-    )
-    calc_category_correlations(
-        configs, category_access_score_dir, data_quality_score_file, output_dir
-    )
+    # calc_total_correlation(
+    #     configs, total_access_score_file, data_quality_score_file, output_dir
+    # )
+    # calc_category_correlations(
+    #     configs, category_access_score_dir, data_quality_score_file, output_dir
+    # )
     calc_corrlation_poi_cnt(configs, poi_cnt_file, data_quality_score_file, output_dir)
