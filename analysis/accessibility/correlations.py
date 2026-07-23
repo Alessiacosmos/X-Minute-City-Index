@@ -5,6 +5,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from matplotlib.ticker import FixedLocator, FixedFormatter
 from omegaconf import DictConfig
 from scipy import stats
 
@@ -13,11 +14,13 @@ from xmin_core.utils.configure import initialize_configs
 
 
 def calc_total_correlation_pop_vs_access(
-    config: DictConfig,
+    configs: DictConfig,
     total_score_descriptor: Path,
     city_population_descriptor: Path,
     output_dir: Path,
 ):
+    nice_ticks_real_total = [50, 100, 200, 500, 1000, 2000, 5000]
+
     total_access_scores = gpd.read_file(total_score_descriptor)
     city_populations = load_city_population_data(city_population_descriptor)
 
@@ -42,6 +45,7 @@ def calc_total_correlation_pop_vs_access(
             category_name="overall accessibility",
             category_both_scores=scores_w_pop_mode_time,
             ax=ax,
+            nice_ticks_real=nice_ticks_real_total,
         )
 
         handles, labels = ax.get_legend_handles_labels()
@@ -53,7 +57,9 @@ def calc_total_correlation_pop_vs_access(
 
         plt.tight_layout(rect=[0, 0.05, 1, 1])
         plt.savefig(
-            output_dir / "overall" / f"{mode}_{time}min_pop_weighted_pop_vs_access.png",
+            output_dir
+            / "overall"
+            / f"{mode}_{time}min_pop_weighted_pop_vs_access_logxaxis.png",
             dpi=300,
             bbox_inches="tight",
         )
@@ -61,11 +67,13 @@ def calc_total_correlation_pop_vs_access(
 
 
 def calc_category_correlation_pop_vs_access(
-    config: DictConfig,
+    configs: DictConfig,
     category_access_score_dir_descriptor: Path,
     city_population_descriptor: Path,
     output_dir: Path,
 ):
+    nice_ticks_real_category = [50, 250, 1000, 4000]
+
     categories = [category.name for category in configs.poi_setting]
 
     city_populations = load_city_population_data(city_population_descriptor)
@@ -100,6 +108,7 @@ def calc_category_correlation_pop_vs_access(
                     ]
                 ],
                 ax=axes[ci],
+                nice_ticks_real=nice_ticks_real_category,
             )
 
         handles, labels = axes[0].get_legend_handles_labels()
@@ -113,7 +122,9 @@ def calc_category_correlation_pop_vs_access(
 
         plt.tight_layout(rect=[0, 0.05, 1, 1])
         plt.savefig(
-            output_dir / "categories" / f"{mode}_{time}min_pop_vs_access_by_class.png",
+            output_dir
+            / "categories"
+            / f"{mode}_{time}min_pop_vs_access_by_class_logxaxis.png",
             dpi=300,
             bbox_inches="tight",
         )
@@ -122,7 +133,7 @@ def calc_category_correlation_pop_vs_access(
 
 def load_city_population_data(city_population_descriptor: Path):
     city_populations = pd.read_csv(city_population_descriptor, header=0)
-    city_populations["population"] = np.log(city_populations["population"] / 1000)
+    city_populations["population"] = np.log10(city_populations["population"] / 1000)
 
     return city_populations
 
@@ -131,6 +142,7 @@ def calc_correlation_accessibility_anal(
     category_name: str,
     category_both_scores: pd.DataFrame,
     ax: plt.Axes,
+    nice_ticks_real: list[int],
 ):
     x = category_both_scores["population"]
 
@@ -177,6 +189,17 @@ def calc_correlation_accessibility_anal(
     ax.set_title(f"{category_name}", fontsize=12)
 
     ax.set_xlim(x_min, x_max)
+
+    # keep only ticks within the actual data range, to avoid clutter/out-of-range labels
+    nice_ticks_real = [v for v in nice_ticks_real if x_min <= np.log10(v) <= x_max]
+
+    # convert to log10(thousands) coordinate space to match your transformed x
+    tick_positions = [np.log10(v) for v in nice_ticks_real]
+    tick_labels = [f"{v:,.0f}" for v in nice_ticks_real]
+
+    ax.xaxis.set_major_locator(FixedLocator(tick_positions))
+    ax.xaxis.set_major_formatter(FixedFormatter(tick_labels))
+
     ax.set_ylim(0, 100)
 
 
