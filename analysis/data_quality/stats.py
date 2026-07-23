@@ -235,7 +235,7 @@ if __name__ == "__main__":
     result_root_dir = Path(
         "/media/kta/heigit/01_Allgemein/Climate Action/x_min_city/Helix_results/accessibility_scores"
     )
-    output_dir = Path("experiments/result_analysis/stats")
+    output_dir = Path("experiments/result_analysis/data_quality/stats")
 
     data_quality_score_file = result_root_dir / "all_city_quality_scores.gpkg"
 

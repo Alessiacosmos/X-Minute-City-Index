@@ -44,6 +44,7 @@ def calc_total_correlation(
             }
         )
 
+        # spearman
         rho, pval = spearmanr(
             scores_both_mode_time["overall_quality"],
             scores_both_mode_time["overall_access"],
@@ -51,6 +52,7 @@ def calc_total_correlation(
         )
         spearman_result[f"{mode}_{time}"] = {"rho": rho, "pval": pval}
 
+        # correlation plot
         fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 
         calc_correlation(
@@ -280,7 +282,7 @@ if __name__ == "__main__":
     result_root_dir = Path(
         "/media/kta/heigit/01_Allgemein/Climate Action/x_min_city/Helix_results/accessibility_scores"
     )
-    output_dir = Path("experiments/result_analysis")
+    output_dir = Path("experiments/result_analysis/data_quality")
 
     poi_cnt_file = result_root_dir / "all_city_poi_cnts.gpkg"
     total_access_score_file = result_root_dir / "all_city_scores.gpkg"
