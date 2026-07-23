@@ -196,6 +196,6 @@ if __name__ == "__main__":
     calc_total_correlation_pop_vs_access(
         configs, total_access_score_file, city_population_file, output_dir
     )
-    # calc_category_correlation_pop_vs_access(
-    #     configs, category_access_score_dir, city_population_file, output_dir
-    # )
+    calc_category_correlation_pop_vs_access(
+        configs, category_access_score_dir, city_population_file, output_dir
+    )
