@@ -273,10 +273,10 @@ if __name__ == "__main__":
 
     configs = initialize_configs(config_file)
 
-    # calc_total_correlation(
-    #     configs, total_access_score_file, data_quality_score_file, output_dir
-    # )
-    # calc_category_correlations(
-    #     configs, category_access_score_dir, data_quality_score_file, output_dir
-    # )
+    calc_total_correlation(
+        configs, total_access_score_file, data_quality_score_file, output_dir
+    )
+    calc_category_correlations(
+        configs, category_access_score_dir, data_quality_score_file, output_dir
+    )
     calc_corrlation_poi_cnt(configs, poi_cnt_file, data_quality_score_file, output_dir)
