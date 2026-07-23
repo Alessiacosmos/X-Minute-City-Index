@@ -5,3 +5,5 @@ style_map = {
     "Netherlands": {"color": "dodgerblue", "marker": "D"},  # diamond
     "Spain": {"color": "goldenrod", "marker": "s"},  # square
 }
+
+travel_mode_map = {"foot-walking": "walking", "cycling-regular": "biking"}
