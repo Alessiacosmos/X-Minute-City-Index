@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from omegaconf import DictConfig
 from scipy import stats
 
-from analysis.data_quality.utils import country_map, style_map
+from analysis.utils import country_map, style_map
 from xmin_core.utils.configure import initialize_configs
 
 
