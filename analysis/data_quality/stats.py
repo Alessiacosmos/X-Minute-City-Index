@@ -9,7 +9,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Patch
 from omegaconf import DictConfig
 
-from analysis.data_quality.utils import country_map, style_map
+from analysis.utils import country_map, style_map
 from xmin_core.utils.configure import initialize_configs
 
 
