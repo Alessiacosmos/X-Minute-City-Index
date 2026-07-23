@@ -1,5 +1,6 @@
 # correlations between per city's data quality score and accessibility score
 import itertools
+import json
 from pathlib import Path
 
 import geopandas as gpd
@@ -9,6 +10,7 @@ from matplotlib import pyplot as plt
 
 from omegaconf import DictConfig
 from scipy import stats
+from scipy.stats import spearmanr
 
 from analysis.utils import country_map, style_map
 from xmin_core.utils.configure import initialize_configs
@@ -30,13 +32,24 @@ def calc_total_correlation(
     )
     scores_both["country"] = scores_both["URAU_CODE"].str[:2].map(country_map)
 
+    spearman_result = {}
     for mode, time in itertools.product(configs.mode_speeds, configs.xmin_timeframes):
         scores_both_mode_time = scores_both[
-            ["URAU_CODE", "country", "total", f"{mode}_{time}min"]
+            ["URAU_CODE", "country", "total", f"{mode}_{time}min_weighted"]
         ]
         scores_both_mode_time = scores_both_mode_time.rename(
-            columns={"total": "overall_quality", f"{mode}_{time}min": "overall_access"}
+            columns={
+                "total": "overall_quality",
+                f"{mode}_{time}min_weighted": "overall_access",
+            }
         )
+
+        rho, pval = spearmanr(
+            scores_both_mode_time["overall_quality"],
+            scores_both_mode_time["overall_access"],
+            nan_policy="omit",
+        )
+        spearman_result[f"{mode}_{time}"] = {"rho": rho, "pval": pval}
 
         fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 
@@ -53,11 +66,14 @@ def calc_total_correlation(
 
         plt.tight_layout(rect=[0, 0.05, 1, 1])
         plt.savefig(
-            output_dir / "overall" / f"{mode}_{time}min_scatter_grid.png",
+            output_dir / "overall" / f"{mode}_{time}min_pop_weighted_scatter_grid.png",
             dpi=300,
             bbox_inches="tight",
         )
         plt.close()
+
+    with open(output_dir / "correlations.json", "w") as jsf:
+        json.dump(spearman_result, jsf, indent=4)
 
 
 def calc_category_correlations(
