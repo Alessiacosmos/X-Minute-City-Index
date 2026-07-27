@@ -139,7 +139,10 @@ def evaluate_attribute_completeness(
 def complete_topic_filter(
     basic_filter: str,
 ) -> str:
-    return basic_filter + " and (type:node or type:way or type:relation)"
+    return (
+        basic_filter
+        + " and (geometry:point or geometry:line or geometry:polygon or geometry:other)"
+    )
 
 
 def call_ohsome_quality_api(
