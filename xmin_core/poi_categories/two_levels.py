@@ -193,9 +193,9 @@ class TwoLvlFacilitiesCategories(POICatogories):
             SubCategory(
                 name="all",
                 sub_weight=1,
-                tag="(leisure=garden and (access!=private or garden:type!=residential)) or "
-                "leisure=nature_reserve or leisure=park or natural=park or natural=beach or "
-                "landuse=grass or landuse=forest",
+                tag="(leisure in (garden, nature_reserve, park) or "
+                "natural in (park, beach) or landuse in (grass, forest)) and "
+                "access!=private and access!=no and garden:type!=residential",
                 benchmark=10e6,  # m2 (= 1 km2) absolute area of nature sapce in isochrone
             ),
         ],
