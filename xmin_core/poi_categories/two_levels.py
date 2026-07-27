@@ -82,7 +82,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
                 name="specialist",
                 sub_weight=0.1,
                 tag="(amenity=doctors or healthcare=doctor or amenity=clinic) and "
-                "(healthcare:speciality=* and (healthcare:speciality!=general and healthcare:speciality!=internal)",
+                "(healthcare:speciality=* and (healthcare:speciality!=general and healthcare:speciality!=internal))",
                 benchmark=3,
             ),
         ],
