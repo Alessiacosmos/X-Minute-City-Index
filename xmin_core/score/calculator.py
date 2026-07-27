@@ -6,6 +6,7 @@ from multiprocessing import Pool
 from pathlib import Path
 
 import geopandas as gpd
+import numpy as np
 import pandas as pd
 from pyproj import CRS
 from rasterstats import gen_zonal_stats
@@ -212,38 +213,39 @@ def score_one_hex_nature_space_by_area(
     sub_weights_benchmarks: dict,
     est_utm_crs: CRS,
 ) -> float:
-    default_nature_space_area = 100
+    default_nature_space_area = 100  # m^2
+    default_nature_space_radius = np.sqrt(default_nature_space_area / np.pi)
     smallest_nature_space_area = 25
 
     isochrone = isochrone if isochrone.is_valid else isochrone.buffer(0)
 
     pois_in_iso = one_hex_reachable_pois.to_crs(est_utm_crs)
     pois_in_iso["geometry"] = pois_in_iso.make_valid()
-    pois_in_iso["area"] = default_nature_space_area
+    pois_in_iso = pois_in_iso[
+        ~pois_in_iso.geom_type.isin(["LineString", "MultiLineString"])
+    ]  # exclude linestrings
 
-    pois_area_in_iso = 0
     for geom_type in pois_in_iso.geometry.type.unique():
+        mask = pois_in_iso.geom_type == geom_type
         match geom_type:
             case "MultiPolygon" | "Polygon" | "GeometryCollection":
-                pois_in_iso_polygon = pois_in_iso[
-                    pois_in_iso.geom_type == geom_type
-                ].clip(isochrone)
+                pass
+            case "Point":
+                pois_in_iso.loc[mask, "geometry"] = pois_in_iso.loc[
+                    mask
+                ].geometry.buffer(default_nature_space_radius)
 
-                pois_in_iso_polygon["area"] = pois_in_iso_polygon.area
-
-                pois_in_iso_polygon.loc[
-                    pois_in_iso_polygon["area"] < smallest_nature_space_area, "area"
-                ] = 0
-                pois_area_in_iso += pois_in_iso_polygon["area"].sum()
-            case _:
-                pois_area_in_iso += pois_in_iso.loc[
-                    pois_in_iso.geom_type == geom_type, "area"
-                ].sum()
-
-    pois_area_in_iso_ratio = pois_area_in_iso / isochrone.area
+    pois_in_iso["area"] = pois_in_iso.area
+    pois_in_iso_solid: gpd.GeoDataFrame = pois_in_iso[
+        pois_in_iso["area"] >= smallest_nature_space_area
+    ]
+    if pois_in_iso_solid.empty:
+        pois_area_absolute = 0
+    else:
+        pois_area_absolute = pois_in_iso_solid.union_all().intersection(isochrone).area
 
     return normalize_score(
-        value=pois_area_in_iso_ratio,
+        value=pois_area_absolute,
         benchmark=sub_weights_benchmarks["all"]["benchmark"],
     )
 
