@@ -81,7 +81,8 @@ class TwoLvlFacilitiesCategories(POICatogories):
             SubCategory(
                 name="specialist",
                 sub_weight=0.1,
-                tag="healthcare:speciality=* and (healthcare:speciality!=general or healthcare:speciality=internal)",
+                tag="(amenity=doctors or healthcare=doctor or amenity=clinic) and "
+                "(healthcare:speciality=* and (healthcare:speciality!=general and healthcare:speciality!=internal)",
                 benchmark=3,
             ),
         ],
@@ -117,7 +118,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
                     SubCategory(
                         name="grocery_specialluxury",
                         sub_weight=0.5,
-                        tag="shop in (alcohol, beverages, chocolate, ice_cream, pastry, spices, tea, water, wine, confectionery)",
+                        tag="shop in (alcohol, beverages, chocolate, ice_cream, pastry, spices, tea, wine, confectionery)",
                         benchmark=5,
                     ),
                 ],
@@ -195,7 +196,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
                 tag="(leisure=garden and (access!=private or garden:type!=residential)) or "
                 "leisure=nature_reserve or leisure=park or natural=park or natural=beach or "
                 "landuse=grass or landuse=forest",
-                benchmark=0.3,  # area percent of nature sapce in isochrone
+                benchmark=10e6,  # m2 (= 1 km2) absolute area of nature sapce in isochrone
             ),
         ],
     )
@@ -266,9 +267,9 @@ class TwoLvlFacilitiesCategories(POICatogories):
                 benchmark=2,
             ),
             SubCategory(
-                name="leisure",
+                name="other",
                 sub_weight=0.1,
-                tag="leisure=dog_park",
+                tag="shop=pet_grooming",
                 benchmark=1,
             ),
         ],
