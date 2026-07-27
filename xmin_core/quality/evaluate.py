@@ -131,7 +131,7 @@ def evaluate_attribute_completeness(
             topic_filter=attr_topic_filter,
             **attr_kwargs,
         )
-        quality_result.update(sub_attr_quality_result)
+        quality_result[sub_attr_topic] = sub_attr_quality_result
 
     return quality_result
 
