@@ -18,16 +18,10 @@ class TwoLvlFacilitiesCategories(POICatogories):
         weight=0.2,
         subcategories=[
             SubCategory(
-                name="primary",
-                sub_weight=0.8,
-                tag="amenity=school and isced:level=1",
-                benchmark=2,
-            ),
-            SubCategory(
-                name="secondary",
-                sub_weight=0.2,
-                tag='amenity=school and (isced:level=2 or isced:level=3 or isced:level="2-3")',
-                benchmark=1,
+                name="all",
+                sub_weight=1,
+                tag="amenity=school",
+                benchmark=3,
             ),
         ],
     )
