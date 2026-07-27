@@ -60,6 +60,7 @@ def get_xmin_index_score(
 
     # get sum poi counts of each category per mode. # non-normalized poi count result
     scores_per_mode_time: dict[str, list[pd.DataFrame]] = defaultdict(list)
+    sub_scores_per_mode_time: dict[str, list[pd.DataFrame]] = defaultdict(list)
     for name_cate, reachable_poi_1cate_files in tqdm(
         reachable_poi_files.items(),
         total=len(reachable_poi_files),
@@ -79,7 +80,7 @@ def get_xmin_index_score(
                 "poi_ids"
             ].apply(ast.literal_eval)
 
-            score_cate = score_hexagons_one_category(
+            score_cate, sub_score_cate = score_hexagons_one_category(
                 hex_iso_reachable_pois_1cate=hex_iso_reachable_pois_1cate,
                 name_cate=name_cate,
                 cate_weights_benchmarks=cate_weights_benchmarks,
@@ -88,6 +89,7 @@ def get_xmin_index_score(
             )
 
             scores_per_mode_time[mode_time].append(score_cate)
+            sub_scores_per_mode_time[mode_time].append(sub_score_cate)
 
     # get score results: filenum = num_modes (e.g. cycle, foot)
     hex_grids.set_index("hex_id", inplace=True)
@@ -107,6 +109,12 @@ def get_xmin_index_score(
             savedir / "scores" / mode_time / "score_categories.csv", index=True
         )
 
+    for mode_time, sub_category_scores in sub_scores_per_mode_time.items():
+        sub_category_scores = pd.concat(sub_category_scores, axis=1)
+        sub_category_scores.to_csv(
+            savedir / "scores" / mode_time / "score_sub_categories.csv", index=True
+        )
+
 
 def score_hexagons_one_category(
     hex_iso_reachable_pois_1cate: gpd.GeoDataFrame,
@@ -114,7 +122,7 @@ def score_hexagons_one_category(
     cate_weights_benchmarks: dict,
     est_utm_crs: CRS,
     poi_filepath: Path,
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     parent_weight, sub_weights_benchmarks = (
         cate_weights_benchmarks["parent_weight"],
         cate_weights_benchmarks["sub_weights_benchmarks"],
@@ -135,11 +143,13 @@ def score_hexagons_one_category(
     )
 
     with Pool(processes=5) as pool:
-        hex_scores = pool.map(_score_one_hex, hex_iso_reachable_pois_1cate.iterrows())
+        results = pool.map(_score_one_hex, hex_iso_reachable_pois_1cate.iterrows())
 
+    hex_scores, hex_sub_scores = zip(*results)
     hex_scores = pd.DataFrame(hex_scores)
+    hex_sub_scores = pd.DataFrame(hex_sub_scores)
 
-    return hex_scores.set_index("hex_id")
+    return hex_scores.set_index("hex_id"), hex_sub_scores.set_index("hex_id")
 
 
 def score_one_hex(
@@ -149,11 +159,12 @@ def score_one_hex(
     parent_weight: float,
     sub_weights_benchmarks: dict,
     est_utm_crs: CRS,
-):
+) -> tuple[dict[str, float], dict[str, float]]:
     _, one_hex_poi_ids = one_hex_row
 
     hex_score = dict()
     hex_score["hex_id"] = one_hex_poi_ids["hex_id"]
+    sub_scores = hex_score.copy()
 
     if len(one_hex_poi_ids["poi_ids"]) == 0:
         hex_score[name_cate] = 0
@@ -167,20 +178,26 @@ def score_one_hex(
             sub_weights_benchmarks=sub_weights_benchmarks,
             est_utm_crs=est_utm_crs,
         )
+        sub_scores[f"{name_cate}/all"] = hex_score[name_cate]
     else:
-        hex_score[name_cate] = score_one_hex_one_category_by_sub_category_pois(
-            one_hex_pois, sub_weights_benchmarks
+        hex_score[name_cate], multi_sub_scores = (
+            score_one_hex_one_category_by_sub_category_pois(
+                one_hex_pois, sub_weights_benchmarks
+            )
         )
+        for multi_sub_cate, multi_sub_score in multi_sub_scores.items():
+            sub_scores[f"{name_cate}/{multi_sub_cate}"] = multi_sub_score
     hex_score[f"{name_cate}_weighted"] = hex_score[name_cate] * parent_weight
 
-    return hex_score
+    return hex_score, sub_scores
 
 
 def score_one_hex_one_category_by_sub_category_pois(
     one_hex_reachable_pois: gpd.GeoDataFrame,
     sub_weights_benchmarks: dict,
-) -> float:
+) -> tuple[float, dict[str, float]]:
     cate_score = 0
+    sub_scores = dict()
     for sub_cate, sub_w_bmk in sub_weights_benchmarks.items():
         if "benchmark" in sub_w_bmk:
             sub_score = score_sub_cate(
@@ -201,10 +218,11 @@ def score_one_hex_one_category_by_sub_category_pois(
             raise NotImplementedError(
                 f"sub category {sub_cate} with {sub_weights_benchmarks} not implemented."
             )
-
+        sub_scores[sub_cate] = sub_score / sub_w_bmk["weight"]
+        sub_scores[f"{sub_cate}_weighted"] = sub_score
         cate_score += sub_score
 
-    return cate_score
+    return cate_score, sub_scores
 
 
 def score_one_hex_nature_space_by_area(
