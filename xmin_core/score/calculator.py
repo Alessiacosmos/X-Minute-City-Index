@@ -221,19 +221,16 @@ def score_one_hex_nature_space_by_area(
 
     pois_in_iso = one_hex_reachable_pois.to_crs(est_utm_crs)
     pois_in_iso["geometry"] = pois_in_iso.make_valid()
+    pois_in_iso = pois_in_iso[
+        ~pois_in_iso.geom_type.isin(["LineString", "MultiLineString"])
+    ]  # exclude linestrings
 
     for geom_type in pois_in_iso.geometry.type.unique():
         mask = pois_in_iso.geom_type == geom_type
         match geom_type:
             case "MultiPolygon" | "Polygon" | "GeometryCollection":
                 pass
-            case "LineString" | "MultiLineString":
-                pois_in_iso.loc[mask, "geometry"] = pois_in_iso.loc[
-                    mask
-                ].geometry.centroid.buffer(
-                    default_nature_space_radius
-                )  # use centroid to simulate it as a point
-            case _:
+            case "Point":
                 pois_in_iso.loc[mask, "geometry"] = pois_in_iso.loc[
                     mask
                 ].geometry.buffer(default_nature_space_radius)
