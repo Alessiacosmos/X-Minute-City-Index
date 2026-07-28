@@ -69,7 +69,7 @@ def get_population_from_raster_data(
     if isinstance(city_polygon, Polygon | MultiPolygon):
         city_polygon = gpd.GeoDataFrame(geometry=[city_polygon], crs=crs)
 
-    with rasterio.Env(raster_s3_settings.s3_client, AWS_VIRTUAL_HOSTING=False):
+    with raster_s3_settings.raster_env():
         with rasterio.open(raster_s3_settings.pop_raster_url) as src:
             aoi_proj = city_polygon.to_crs(src.crs)
             bbox_bounds = box(*aoi_proj.total_bounds)

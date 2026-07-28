@@ -1,9 +1,12 @@
 import atexit
 import os
+from contextlib import contextmanager
 from functools import cached_property
+from typing import Optional
 
 import openrouteservice
-from pydantic import SecretStr
+import rasterio
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pyrate_limiter import SQLiteBucket
 from rasterio.session import AWSSession
@@ -20,7 +23,23 @@ class RasterS3Settings(BaseSettings):
     s3_bucket: str
     s3_pop_filename: str
 
+    # optional override — if set, local file is used instead of S3
+    local_pop_path: Optional[str] = None
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @field_validator("local_pop_path", mode="before")
+    @classmethod
+    def blank_to_none(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and v.strip() == "":
+            return None
+        return v
+
+    @property
+    def use_local(self) -> bool:
+        return self.local_pop_path is not None
 
     @cached_property
     def s3_client(self) -> AWSSession:
@@ -34,7 +53,18 @@ class RasterS3Settings(BaseSettings):
 
     @cached_property
     def pop_raster_url(self) -> str:
+        if self.use_local:
+            return self.local_pop_path
+
         return f"s3://{self.s3_bucket}/{self.s3_pop_filename}"
+
+    @contextmanager
+    def raster_env(self):
+        if self.s3_client:
+            with rasterio.Env(session=self.s3_client, AWS_VIRTUAL_HOSTING=False):
+                yield
+        else:
+            yield
 
 
 class ORSSettings(BaseSettings):
