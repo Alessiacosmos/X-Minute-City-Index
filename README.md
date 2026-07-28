@@ -32,7 +32,8 @@ The repository is managed by uv.
 ```shell
 $ uv sync # --extra dev
 ```
-3. Set `.env` file (please copy `.env_template` and rename it as `.env`) to access to HeiGIT population data bucket and ORS service.
+3. Set `.env` file (please copy `.env_template` and rename it as `.env`) to access to population data and ORS service.
+   - HeiGIT S3 bucket stores [GHS-POP data (2025_R2023A, 3ss)](https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php), while it's not so easy to get access for externals. Instead, you can host the data locally, and fill `LOCAL_POP_PATH=` parameter.
 4. Run the following command:
 ```shell
 # You have a vector layer including a series of AOIs you want to analyse accessibility
