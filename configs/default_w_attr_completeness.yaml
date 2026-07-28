@@ -1,0 +1,21 @@
+xmin_timeframes: [15, 30]
+
+mode_speeds:
+  foot-walking: 1.3889  # m/s (5 km/h)
+  cycling-regular: 4.1667 # m/s (15 km/h)
+
+hex_resolution: 8 # Set the  H3 resolution. ref: https://h3geo.org/docs/core-library/restable/
+
+poi_setting: 'two_level'
+
+attribute_completeness_filters:
+  education:
+    topic_filter: '(amenity=school)'
+    attribute_filter:
+      primary: 'isced:level=1'
+      secondary: 'isced:level=2 or isced:level=3 or isced:level="2-3"'
+  healthcare:
+    topic_filter: '(amenity=doctors or healthcare=doctor or amenity=clinic)'
+    attribute_filter:
+      primary_care: 'healthcare:speciality=general or healthcare:speciality=internal'
+      specialist: 'healthcare:speciality=* and (healthcare:speciality!=general and healthcare:speciality!=internal)'

@@ -13,4 +13,5 @@
 # Replace 'my_workspace' with the exact name you used in 'ws_allocate'
 export MY_WORKSPACE=$(ws_find xmin)
 
-uv run xmin_core/cli.py --aoi_descriptor resources/explored_cities.gpkg --aoi_id_col URAU_CODE --config_descriptor configs/default.yaml --output_dir $MY_WORKSPACE --activated_funcs=['quality'] --quality_indicators=['map_saturation']
+#uv run xmin_core/cli.py --aoi_descriptor resources/explored_cities.gpkg --aoi_id_col URAU_CODE --config_descriptor configs/default.yaml --output_dir $MY_WORKSPACE --activated_funcs=['quality'] --quality_indicators=['map_saturation']
+uv run xmin_core/cli.py --aoi_descriptor resources/explored_cities.gpkg --aoi_id_col URAU_CODE --config_descriptor configs/default_w_attr_completeness.yaml --output_dir $MY_WORKSPACE --activated_funcs=['quality'] --quality_indicators=[map_saturation,attribute_completeness]

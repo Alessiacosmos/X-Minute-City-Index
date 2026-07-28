@@ -89,6 +89,9 @@ def xmin_index(
                 indicators=quality_indicators,
                 ohsome_quality_settings=ohsome_quality_settings,
                 poi_setting=configs.poi_setting,
+                attribute_completeness_settings=configs.get(
+                    "attribute_completeness_filters", None
+                ),
                 workdir=aoi_workdir,
             )
 
