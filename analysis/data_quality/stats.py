@@ -22,8 +22,9 @@ def stat_by_country(
     data_quality_scores["Country"] = (
         data_quality_scores["URAU_CODE"].str[:2].map(country_map)
     )
+    data_quality_scores = data_quality_scores.rename(columns={"total": "overall"})
 
-    categories = [category.name for category in configs.poi_setting] + ["total"]
+    categories = [category.name for category in configs.poi_setting] + ["overall"]
 
     country_cat_matrix = data_quality_scores.groupby("Country")[categories].mean()
 
@@ -86,7 +87,7 @@ def draw_boxplots_per_category_per_country(
     plt.close()
 
     sns.boxplot(
-        data=melted[melted["Category"] == "total"],
+        data=melted[melted["Category"] == "overall"],
         x="Country",
         y="Mapping saturation score",
         hue="Country",
@@ -105,7 +106,7 @@ def draw_hist_total_score_per_country(qscores: gpd.GeoDataFrame, output_dir: Pat
     plt.figure(figsize=(8, 5))
     sns.histplot(
         data=qscores,
-        x="total",
+        x="overall",
         hue="Country",
         kde=True,
         element="step",
@@ -113,7 +114,9 @@ def draw_hist_total_score_per_country(qscores: gpd.GeoDataFrame, output_dir: Pat
         common_norm=False,
         palette={country: styles["color"] for country, styles in style_map.items()},
     )
-    plt.title("Overall mapping saturation score distribution by country")
+    plt.xlabel("Overall mapping saturation", fontsize=12)
+    plt.ylabel("Density", fontsize=12)
+    plt.title("Overall mapping saturation score distribution by country", fontsize=14)
     plt.tight_layout()
     plt.savefig(output_dir / "histogram_total_country.png", dpi=300)
     plt.close()
@@ -126,28 +129,29 @@ def draw_score_ranking(
     rank_num: int = 5,
 ):
     # by overall score
-    topN = qscores.nlargest(rank_num, "total")
-    bottomN = qscores.nsmallest(rank_num, "total").sort_values(
-        by=["total"], ascending=False
+    topN = qscores.nlargest(rank_num, "overall")
+    bottomN = qscores.nsmallest(rank_num, "overall").sort_values(
+        by=["overall"], ascending=False
     )
 
     top_bottom = pd.concat(
         [topN.assign(Group="Top 5"), bottomN.assign(Group="Bottom 5")]
     )
 
-    fig, ax = plt.subplots(figsize=(11, 6))
+    fig, ax = plt.subplots(figsize=(9.5, 5))
     colors = top_bottom["Group"].map(
         {f"Top {rank_num}": "#2a9d8f", f"Bottom {rank_num}": "#e76f51"}
     )
     bars = ax.barh(
         top_bottom["URAU_NAME"] + ", " + top_bottom["CNTR_CODE"],
-        top_bottom["total"],
+        top_bottom["overall"],
         color=colors,
     )
     ax.invert_yaxis()  # highest score at top
-    ax.set_xlabel("Total mapping saturation score")
+    ax.set_xlabel("Overall mapping saturation score", fontsize=12)
     ax.set_title(
-        f"Top {rank_num} and Bottom {rank_num} cities by total mapping saturation score"
+        f"Top {rank_num} and Bottom {rank_num} cities by total mapping saturation score",
+        fontsize=14.0,
     )
     ax.bar_label(bars, fmt="%.1f", padding=3)
 

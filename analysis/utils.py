@@ -63,7 +63,7 @@ def calc_correlation_accessibility_anal(
                 line_x, line_y, color=style["color"], linestyle=linestyle, linewidth=1.5
             )
 
-    ax.set_title(f"{category_name}", fontsize=12)
+    ax.set_title(f"{category_name.capitalize()}", fontsize=12)
 
     ax.set_xlim(x_min, x_max)
 
@@ -126,7 +126,7 @@ def calc_correlation_data_quality(
     else:
         reg_label = "Regression: n/a"
 
-    ax.set_title(f"{category_name} ({reg_label})", fontsize=9)
+    ax.set_title(f"{category_name.capitalize()} ({reg_label})", fontsize=11)
 
     ax.set_xlim(0, 100) if x_suffix in ["access", "quality"] else ax.set_xlim(
         x.min(), x.max()

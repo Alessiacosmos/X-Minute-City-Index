@@ -65,7 +65,7 @@ def calc_total_correlation(
         )
 
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles, labels, loc="upper left")
+        ax.legend(handles, labels, loc="lower right")
         fig.supxlabel("Mapping saturation score", y=0.07, fontsize=11)
         fig.supylabel("Accessibility score", fontsize=11)
 
@@ -163,7 +163,7 @@ def calc_correlation_pop_size(
         columns={"total": "overall mapping saturation"}
     )
 
-    fig, ax = plt.subplots(1, 1, figsize=(9, 7))
+    fig, ax = plt.subplots(1, 1, figsize=(7, 5))
 
     calc_correlation_accessibility_anal(
         category_name="overall mapping saturation",
@@ -173,11 +173,12 @@ def calc_correlation_pop_size(
     )
 
     handles, labels = ax.get_legend_handles_labels()
+    ax.set_ylim(50, 100)
     ax.legend(handles, labels, loc="lower right")
     fig.supxlabel(
-        "Population size (thousands of people, log scale)", y=0.07, fontsize=11
+        "Population size (thousands of people, log scale)", y=0.07, fontsize=12
     )
-    fig.supylabel("Mapping saturation", fontsize=11)
+    fig.supylabel("Mapping saturation", fontsize=12)
 
     plt.tight_layout(rect=[0, 0.05, 1, 1])
     plt.savefig(
@@ -198,7 +199,7 @@ def calc_corrlation_poi_cnt(
 
     data_quality_scores = gpd.read_file(data_quality_score_descriptor)
     total_poi_cnts = gpd.read_file(total_poi_cnt_descriptor)
-    total_poi_cnts[categories + ["total"]] = np.log(
+    total_poi_cnts[categories + ["total"]] = np.log10(
         total_poi_cnts[categories + ["total"]] / 100
     )
 
@@ -290,12 +291,12 @@ if __name__ == "__main__":
 
     configs = initialize_configs(config_file)
 
-    # calc_total_correlation(
-    #     configs, total_access_score_file, data_quality_score_file, output_dir
-    # )
-    # calc_category_correlations(
-    #     configs, category_access_score_dir, data_quality_score_file, output_dir
-    # )
+    calc_total_correlation(
+        configs, total_access_score_file, data_quality_score_file, output_dir
+    )
+    calc_category_correlations(
+        configs, category_access_score_dir, data_quality_score_file, output_dir
+    )
     calc_correlation_pop_size(
         configs, city_population_file, data_quality_score_file, output_dir
     )
