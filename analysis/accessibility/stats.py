@@ -35,7 +35,7 @@ def present_scores_at_different_travel_settings(
         average_scores, axis=1, ignore_index=True
     )  # index = Germany, Netherlands, Spain, mode, time
 
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(7, 5))
     x_positions = {
         (average_scores.loc["mode", acol], average_scores.loc["time", acol]): acol + 1
         for acol in average_scores.columns
@@ -68,7 +68,7 @@ def present_scores_at_different_travel_settings(
     ax.set_xticks(list(x_positions.values()))
     ax.set_xticklabels([f"{t}-min" for t in average_scores.loc["time"]])
     ax.set_ylim(49, 101)
-    ax.set_ylabel("Accessibility score")
+    ax.set_ylabel("Accessibility score", fontsize=11)
     ax.tick_params(axis="y")  # , labelsize=14)
 
     # group labels (mode names) centered under each mode's ticks
@@ -90,7 +90,7 @@ def present_scores_at_different_travel_settings(
 
     ax.set_title(
         "Average accessibility scores across travel modes and time thresholds",
-        fontsize=9,
+        fontsize=11,
     )
     plt.tight_layout()
 

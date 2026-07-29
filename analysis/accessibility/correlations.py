@@ -48,7 +48,7 @@ def calc_total_correlation_pop_vs_access(
             columns={f"{mode}_{time}min_weighted": "overall accessibility"}
         )
 
-        fig, ax = plt.subplots(1, 1, figsize=(9, 7))
+        fig, ax = plt.subplots(1, 1, figsize=(7, 5))
 
         calc_correlation_accessibility_anal(
             category_name="overall accessibility",
@@ -114,7 +114,7 @@ def calc_category_correlation_pop_vs_access(
             scores_w_pop_mode_time["URAU_CODE"].str[:2].map(country_map)
         )
 
-        fig, axes = plt.subplots(3, 3, figsize=(14, 10), sharex=True, sharey=True)
+        fig, axes = plt.subplots(3, 3, figsize=(13.5, 9.5), sharex=True, sharey=True)
         axes = axes.flatten()
 
         for ci, category in enumerate(categories):
