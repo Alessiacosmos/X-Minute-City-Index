@@ -33,7 +33,7 @@ def stat_by_country(
     draw_boxplots_per_category_per_country(
         qscores=data_quality_scores, categories=categories, output_dir=output_dir
     )
-    draw_hist_total_score_per_country(
+    draw_beeswarm_total_score_per_country(
         qscores=data_quality_scores, output_dir=output_dir
     )  # beeswarm to replace hist
 

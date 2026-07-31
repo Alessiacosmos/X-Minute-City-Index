@@ -47,7 +47,7 @@ def calc_correlation_accessibility_anal(
             marker=style["marker"],
             edgecolor="black",
             linewidth=0.3,
-            alpha=0.8,
+            alpha=0.9,
             s=50,
             label=country,
         )
@@ -120,7 +120,7 @@ def calc_correlation_data_quality(
             marker=style["marker"],
             edgecolor="black",
             linewidth=0.3,
-            alpha=0.8,
+            alpha=0.9,
             s=50,
             label=country,
         )
