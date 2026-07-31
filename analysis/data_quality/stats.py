@@ -35,7 +35,7 @@ def stat_by_country(
     )
     draw_hist_total_score_per_country(
         qscores=data_quality_scores, output_dir=output_dir
-    )
+    )  # beeswarm to replace hist
 
     # ranking
     draw_score_ranking(
@@ -119,6 +119,45 @@ def draw_hist_total_score_per_country(qscores: gpd.GeoDataFrame, output_dir: Pat
     plt.title("Overall mapping saturation score distribution by country", fontsize=14)
     plt.tight_layout()
     plt.savefig(output_dir / "histogram_total_country.png", dpi=300)
+    plt.close()
+
+
+def draw_beeswarm_total_score_per_country(qscores: gpd.GeoDataFrame, output_dir: Path):
+    medians = qscores.groupby("Country", observed=True)["overall"].median()
+
+    fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+    for x_pos, (country, style) in enumerate(style_map.items()):
+        pts = qscores[qscores["Country"] == country]
+        sns.swarmplot(
+            x="Country",
+            y="overall",
+            data=pts,
+            order=list(style_map.keys()),
+            color=style["color"],
+            marker=style["marker"],
+            edgecolor="black",
+            linewidth=0.3,
+            size=4,
+            ax=ax,
+        )
+
+        # median line
+        ax.hlines(
+            medians[country],
+            x_pos - 0.4,
+            x_pos + 0.4,
+            color="black",
+            linewidth=1,
+        )
+
+    ax.set_xlabel("Country", fontsize=11)
+    ax.set_ylabel("Overall mapping saturation", fontsize=11)
+    ax.set_title(
+        "Beeswarm mapping saturation score distribution by country", fontsize=11
+    )
+
+    plt.tight_layout()
+    plt.savefig(output_dir / "beeswarm_total_country.png", dpi=300)
     plt.close()
 
 
