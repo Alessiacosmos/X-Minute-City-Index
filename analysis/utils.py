@@ -7,12 +7,30 @@ from scipy import stats
 country_map = {"DE": "Germany", "NL": "Netherlands", "ES": "Spain"}
 
 style_map = {
-    "Germany": {"color": "limegreen", "marker": "o"},  # circle
-    "Netherlands": {"color": "dodgerblue", "marker": "D"},  # diamond
-    "Spain": {"color": "goldenrod", "marker": "s"},  # square
+    "Germany": {"color": "#009E73", "marker": "o"},  # circle
+    "Netherlands": {"color": "#56B4E9", "marker": "D"},  # diamond
+    "Spain": {"color": "#E69F00", "marker": "s"},  # square
+}
+
+city_name_fixes_map = {
+    "München": "Munich",
+    "'s-Gravenhage": "The Hague",
+    "Köln": "Cologne",
 }
 
 travel_mode_map = {"foot-walking": "walking", "cycling-regular": "biking"}
+
+default_category_weights = {
+    "education": 0.2,
+    "childcare": 0.1,
+    "healthcare": 0.1,
+    "daily_living": 0.4,
+    "public_transport": 0.1,
+    "nature_space": 0.05,
+    "culture_leisure": 0.02,
+    "eating_out": 0.02,
+    "pets": 0.01,
+}
 
 
 def calc_correlation_accessibility_anal(
