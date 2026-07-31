@@ -56,7 +56,13 @@ def run_sensitivity_analysis(
     n_draws: int,
 ) -> pd.DataFrame:
     # Monte-Carlo simulation
+    ## prepare random flags
     rng = np.random.default_rng(52)
+    n_draws = (n_draws // 2) * 2  # make it always even
+    geometric_flags = np.zeros(n_draws, dtype=bool)
+    geometric_flags[: n_draws // 2] = True
+    rng.shuffle(geometric_flags)
+
     n_cities = len(category_access_scores)
     sensitivity_results = np.empty((n_cities, n_draws))
 
@@ -71,9 +77,8 @@ def run_sensitivity_analysis(
             0.75, 1.25, size=len(category_weights)
         )
         weights_i = weights_i / weights_i.sum()
-        geometric = rng.random() < 0.5  # sample(c(T, F), 1)
 
-        if geometric:
+        if geometric_flags[i]:
             sensitivity_results[:, i] = weighted_geo_mean(score_matrix, weights_i)
         else:
             sensitivity_results[:, i] = (
