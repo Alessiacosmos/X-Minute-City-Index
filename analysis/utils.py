@@ -7,9 +7,15 @@ from scipy import stats
 country_map = {"DE": "Germany", "NL": "Netherlands", "ES": "Spain"}
 
 style_map = {
-    "Germany": {"color": "limegreen", "marker": "o"},  # circle
-    "Netherlands": {"color": "dodgerblue", "marker": "D"},  # diamond
-    "Spain": {"color": "goldenrod", "marker": "s"},  # square
+    "Germany": {"color": "#009E73", "marker": "o"},  # circle
+    "Netherlands": {"color": "#56B4E9", "marker": "D"},  # diamond
+    "Spain": {"color": "#E69F00", "marker": "s"},  # square
+}
+
+city_name_fixes_map = {
+    "München": "Munich",
+    "'s-Gravenhage": "The Hague",
+    "Köln": "Cologne",
 }
 
 travel_mode_map = {"foot-walking": "walking", "cycling-regular": "biking"}
