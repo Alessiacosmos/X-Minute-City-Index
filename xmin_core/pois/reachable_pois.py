@@ -237,8 +237,29 @@ def create_isochrone_batch(
             and e.args[0] == 500
             and e.message.get("error", {}).get("code") == 3099
         ):
-            # cannot create isochrone (because the region is too far away from the road (may be at the sea)
-            abnormal_hex_ids.append(centroid_batch["hex_id"].values)
+            if len(centroid_batch) == 1:
+                # cannot create isochrone (because the region is too far away from the road (may be at the sea)
+                abnormal_hex_ids.append(centroid_batch["hex_id"].values)
+            else:
+                # retry each point on the batch
+                single_isos = []
+                for i in range(len(centroid_batch)):
+                    single_iso, single_abnormal = create_isochrone_batch(
+                        centroid_batch.iloc[[i]],
+                        mode=mode,
+                        time_range=time_range,
+                        ors_settings=ors_settings,
+                        engine_savename=engine_savename,
+                    )
+                    if single_iso is not None:
+                        single_isos.append(single_iso)
+                    if len(single_abnormal) > 0:
+                        abnormal_hex_ids.append(single_abnormal)
+                if len(single_isos) > 0:
+                    iso = gpd.GeoDataFrame(
+                        pd.concat(single_isos, ignore_index=True),
+                        crs=centroid_batch.crs,
+                    )
         else:
             raise e
 
