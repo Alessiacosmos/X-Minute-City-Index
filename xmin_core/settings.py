@@ -144,7 +144,8 @@ class ORSSettings(BaseSettings):
             pass
 
 
-class OhsomeQualitySettings(BaseSettings):
+class OhsomeRelatedSettings(BaseSettings):
+    ohsome_base_url: Optional[str] = None
     ohsome_quality_base_url: str = "https://api.quality.ohsome.org/v1-test"
     ohsome_quality_endpoint: str = "/indicators"
 
@@ -153,6 +154,8 @@ class OhsomeQualitySettings(BaseSettings):
     indicator_currentness: str = "currentness"
 
     ohsome_quality_headers: dict[str, str] = {"accept": "application/json"}
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # ref: https://github.com/GIScience/ohsome-quality-api-examples/blob/main/OQAPI_grid_request.py
     @cached_property

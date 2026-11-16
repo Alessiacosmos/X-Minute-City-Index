@@ -3,13 +3,13 @@ from pathlib import Path
 from typing import Literal
 
 import geopandas as gpd
-import ohsome
 from jsonargparse import auto_cli
+from ohsome_py2.client import OhsomeClient
 from tqdm import tqdm
 
 from xmin_core.quality.evaluate import evaluate_poi_quality
 from xmin_core.score.scoring import score_xmin_index_one_aoi
-from xmin_core.settings import RasterS3Settings, ORSSettings, OhsomeQualitySettings
+from xmin_core.settings import RasterS3Settings, ORSSettings, OhsomeRelatedSettings
 from xmin_core.utils.configure import initialize_configs
 
 logger = logging.getLogger(__name__)
@@ -41,10 +41,11 @@ def xmin_index(
     logger.info("Initializing settings...")
     raster_s3_settings = RasterS3Settings()
     ors_settings = ORSSettings()
-    ohsome_client = ohsome.OhsomeClient(
-        user_agent="CA Research Xmin-city Accessibility"
+    ohsome_quality_settings = OhsomeRelatedSettings()
+    ohsome_client = OhsomeClient(
+        user_agent="CA Research Xmin-city Accessibility",
+        base_url=ohsome_quality_settings.ohsome_base_url,
     )
-    ohsome_quality_settings = OhsomeQualitySettings()
 
     # initialize configs
     logger.info(f"Initializing configs from {config_descriptor}...")
