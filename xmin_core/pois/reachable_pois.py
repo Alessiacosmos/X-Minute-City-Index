@@ -1,3 +1,4 @@
+import json
 import logging
 import time
 from functools import partial
@@ -108,6 +109,7 @@ def create_isochrones(
     batched_centroids = batch_hexes(centroids, ors_settings.ors_isochrone_batch_size)
 
     isochrone_savenames = []
+    isochrone_engine_savename = savedir / "engine.json"
     for mode in speed_modes:
         for time_range in timeframes:
             savename = savedir / f"{mode}_{time_range}min.gpkg"
@@ -131,6 +133,7 @@ def create_isochrones(
                 mode=mode,
                 time_range=time_range * 60,
                 ors_settings=ors_settings,
+                engine_savename=isochrone_engine_savename,
             )
 
             with ThreadPool(ors_settings.ors_isochrone_pool_number) as pool:
@@ -192,6 +195,7 @@ def create_isochrone_batch(
     mode: str,
     time_range: int,
     ors_settings: ORSSettings,
+    engine_savename: Path | None,
 ) -> tuple[gpd.GeoDataFrame, list[str]]:
     """
     Processes a batch of POIs to calculate travel time matrices
@@ -214,6 +218,12 @@ def create_isochrone_batch(
             location_type="start",
             range_type="time",
         )
+
+        # save the engine used for isochrone computation
+        if engine_savename is not None and not engine_savename.exists():
+            with open(engine_savename, "w") as engf:
+                json.dump(isochrones["metadata"]["engine"], engf, indent=4)
+
         iso = gpd.GeoDataFrame.from_features(
             isochrones, crs=centroid_batch.crs
         )  # [index, geometry, properties]
@@ -227,8 +237,29 @@ def create_isochrone_batch(
             and e.args[0] == 500
             and e.message.get("error", {}).get("code") == 3099
         ):
-            # cannot create isochrone (because the region is too far away from the road (may be at the sea)
-            abnormal_hex_ids.append(centroid_batch["hex_id"].values)
+            if len(centroid_batch) == 1:
+                # cannot create isochrone (because the region is too far away from the road (may be at the sea)
+                abnormal_hex_ids.append(centroid_batch["hex_id"].values)
+            else:
+                # retry each point on the batch
+                single_isos = []
+                for i in range(len(centroid_batch)):
+                    single_iso, single_abnormal = create_isochrone_batch(
+                        centroid_batch.iloc[[i]],
+                        mode=mode,
+                        time_range=time_range,
+                        ors_settings=ors_settings,
+                        engine_savename=engine_savename,
+                    )
+                    if single_iso is not None:
+                        single_isos.append(single_iso)
+                    if len(single_abnormal) > 0:
+                        abnormal_hex_ids.append(single_abnormal)
+                if len(single_isos) > 0:
+                    iso = gpd.GeoDataFrame(
+                        pd.concat(single_isos, ignore_index=True),
+                        crs=centroid_batch.crs,
+                    )
         else:
             raise e
 
