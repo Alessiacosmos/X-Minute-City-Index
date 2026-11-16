@@ -13,7 +13,7 @@ from omegaconf import DictConfig
 from xmin_core.poi_categories.base import POICatogories
 from xmin_core.quality.figure import adjust_figure_funcs
 from xmin_core.quality.indicator_params import get_indicator_params
-from xmin_core.settings import OhsomeQualitySettings
+from xmin_core.settings import OhsomeRelatedSettings
 
 
 def evaluate_poi_quality(
@@ -21,7 +21,7 @@ def evaluate_poi_quality(
     indicators: list[
         Literal["map_saturation", "attribute_completeness", "currentness"]
     ],
-    ohsome_quality_settings: OhsomeQualitySettings,
+    ohsome_quality_settings: OhsomeRelatedSettings,
     poi_setting: POICatogories,
     attribute_completeness_settings: DictConfig | None,
     workdir: Path,

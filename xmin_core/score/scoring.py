@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import geopandas as gpd
@@ -23,6 +24,7 @@ def score_xmin_index_one_aoi(
     workdir: Path,
 ):
     poi_setting = configs.poi_setting
+    poi_timestamp = datetime.strptime(configs.poi_timestamp, "%Y-%m-%d")
 
     ##########
     # 1. get basic geometry data: polygon + crs; hex_grids
@@ -50,7 +52,7 @@ def score_xmin_index_one_aoi(
     pois_dir = workdir / "pois"
     pois_dir.mkdir(parents=True, exist_ok=True)
     city_pois_cates_files = get_city_pois_categories(
-        ohsome_client, buffered_aoi, poi_setting, est_utm_crs, pois_dir
+        ohsome_client, buffered_aoi, poi_setting, poi_timestamp, est_utm_crs, pois_dir
     )
 
     # 2.2 assign population to hex grid. attr: Living

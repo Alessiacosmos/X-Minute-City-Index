@@ -1,9 +1,11 @@
+from datetime import datetime
 from pathlib import Path
 
 import logging
+
 import geopandas as gpd
 import pandas as pd
-from ohsome import OhsomeClient, OhsomeException
+from ohsome_py2.client import OhsomeClient
 
 from pyproj import CRS
 from shapely import Polygon
@@ -18,6 +20,7 @@ def get_city_pois_categories(
     ohsome_client: OhsomeClient,
     buffered_polygon: Polygon,
     poi_categories: POICatogories,
+    poi_timestamp: datetime | None,
     est_utm_crs: CRS,
     savedir: Path,
 ) -> dict[str, Path]:
@@ -43,6 +46,7 @@ def get_city_pois_categories(
                 subcategories=subcategory,
                 ohsome_client=ohsome_client,
                 buffered_polygon=buffered_polygon,
+                timestamp=poi_timestamp,
             )
             cate_pois.extend(subcate_pois)
 
@@ -61,11 +65,15 @@ def get_pois_sub_categories(
     subcategories: list[SubCategory],
     ohsome_client: OhsomeClient,
     buffered_polygon: Polygon,
+    timestamp: datetime | None,
 ) -> list[gpd.GeoDataFrame]:
     parent_cate_pois = []
     for leaf_cateogry in subcategories:
         leaf_cate_pois = fetch_osm_data(
-            ohsome=ohsome_client, aoi=buffered_polygon, osm_filter=leaf_cateogry.tag
+            ohsome=ohsome_client,
+            aoi=buffered_polygon,
+            osm_filter=leaf_cateogry.tag,
+            timestamp=timestamp,
         )
         leaf_cate_pois["sub_category"] = leaf_cateogry.name
         parent_cate_pois.append(leaf_cate_pois)
@@ -74,15 +82,19 @@ def get_pois_sub_categories(
 
 
 def fetch_osm_data(
-    ohsome: OhsomeClient, aoi: Polygon, osm_filter: str
+    ohsome: OhsomeClient,
+    aoi: Polygon,
+    osm_filter: str,
+    timestamp: datetime | None,
 ) -> gpd.GeoDataFrame:
     try:
-        elements = ohsome.elements.geometry.post(
-            bpolys=aoi, clipGeometry=True, properties="tags", filter=osm_filter
-        ).as_dataframe()
-    except OhsomeException as e:
+        elements = ohsome.features_extraction(
+            aoi=aoi, osm_filter=osm_filter, clip=True, timestamp=timestamp
+        )
+    except Exception as e:
         raise e
 
-    elements = elements.reset_index(drop=False)
+    elements["@osmId"] = elements["osm_type"] + "_" + elements["osm_id"].astype(str)
+    elements = elements.rename(columns={"geom": "geometry"})
 
-    return elements[["@osmId", "geometry", "@other_tags"]]
+    return elements[["@osmId", "geometry", "osm_tags"]]
