@@ -1,3 +1,4 @@
+import json
 import logging
 import time
 from functools import partial
@@ -108,6 +109,7 @@ def create_isochrones(
     batched_centroids = batch_hexes(centroids, ors_settings.ors_isochrone_batch_size)
 
     isochrone_savenames = []
+    isochrone_engine_savename = savedir / "engine.json"
     for mode in speed_modes:
         for time_range in timeframes:
             savename = savedir / f"{mode}_{time_range}min.gpkg"
@@ -131,6 +133,7 @@ def create_isochrones(
                 mode=mode,
                 time_range=time_range * 60,
                 ors_settings=ors_settings,
+                engine_savename=isochrone_engine_savename,
             )
 
             with ThreadPool(ors_settings.ors_isochrone_pool_number) as pool:
@@ -192,6 +195,7 @@ def create_isochrone_batch(
     mode: str,
     time_range: int,
     ors_settings: ORSSettings,
+    engine_savename: Path | None,
 ) -> tuple[gpd.GeoDataFrame, list[str]]:
     """
     Processes a batch of POIs to calculate travel time matrices
@@ -214,6 +218,12 @@ def create_isochrone_batch(
             location_type="start",
             range_type="time",
         )
+
+        # save the engine used for isochrone computation
+        if engine_savename is not None and not engine_savename.exists():
+            with open(engine_savename, "w") as engf:
+                json.dump(isochrones["metadata"]["engine"], engf, indent=4)
+
         iso = gpd.GeoDataFrame.from_features(
             isochrones, crs=centroid_batch.crs
         )  # [index, geometry, properties]
