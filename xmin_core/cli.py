@@ -1,4 +1,5 @@
 import logging
+import time
 from pathlib import Path
 from typing import Literal
 
@@ -20,6 +21,7 @@ def xmin_index(
     config_descriptor: Path,
     output_dir: Path,
     aoi_id_col: str = None,
+    time_recorder: bool = True,
     activated_funcs: list[Literal["accessibility", "quality"]] = ["accessibility"],
     quality_indicators: list[
         Literal["map_saturation", "attribute_completeness", "currentness"]
@@ -33,6 +35,7 @@ def xmin_index(
     :param output_dir: Path where the output layers will be saved.
                        For each AOI, a subdirectory named 'aoi_{id}' will be created to store the results.
     :param aoi_id_col: AOI ID column's name e.g. URAU_CODE
+    :param time_recorder: Whether to record runtime information or not.
     :param activated_funcs: what function you want to activated, accessibility (score) or (ohsome) quality
     :param quality_indicators: what indicator we want to calculate based on ohsome_quality_api
     :return:
@@ -52,6 +55,12 @@ def xmin_index(
     configs = initialize_configs(config_descriptor)
     logger.info(f"POI setting: {configs.poi_setting.__name__}")
 
+    # initialize time recorder
+    if time_recorder:
+        time_recorder = output_dir / "time_record.csv"
+        with open(time_recorder, "w") as tf:
+            tf.write(f"{aoi_id_col},runtime(min)\n")
+
     # run the index calculation
     logger.info("Calculating x-min accessibility index...")
 
@@ -69,6 +78,7 @@ def xmin_index(
         aoi.to_file(aoi_workdir / f"aoi_{aoi_id}.geojson", driver="GeoJSON")
 
         if "accessibility" in activated_funcs:
+            st_ai = time.time()
             score_xmin_index_one_aoi(
                 aoi=aoi,
                 configs=configs,
@@ -77,6 +87,9 @@ def xmin_index(
                 ohsome_client=ohsome_client,
                 workdir=aoi_workdir,
             )
+            if time_recorder:
+                with open(time_recorder, "a") as tf:
+                    tf.write(f"{aoi_id},{(time.time() - st_ai) / 60:.3f}\n")
 
         if "quality" in activated_funcs and quality_indicators is not None:
             buffered_aoi = (
