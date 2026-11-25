@@ -4,7 +4,7 @@ from xmin_core.poi_categories.base import POICatogories, Category, SubCategory
 class DEHealthCareCategories(POICatogories):
     # special poi_category setting for Germany (DE)
     healthcare = Category(
-        weight=0.1,
+        weight=1,
         subcategories=[
             SubCategory(
                 name="primary_care",
@@ -40,7 +40,7 @@ class DEHealthCareCategories(POICatogories):
 class NLHealthCareCategories(POICatogories):
     # special poi_category setting for the Netherlands (NL)
     healthcare = Category(
-        weight=0.1,
+        weight=1,
         subcategories=[
             SubCategory(
                 name="primary_care",
@@ -76,7 +76,7 @@ class NLHealthCareCategories(POICatogories):
 class ESHealthCareCategories(POICatogories):
     # special poi_category setting for Spain (ES)
     healthcare = Category(
-        weight=0.1,
+        weight=1,
         subcategories=[
             Category(
                 group="primary_care",
