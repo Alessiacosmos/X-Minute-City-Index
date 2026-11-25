@@ -19,7 +19,7 @@ dependencies = [
     "ohsome>=0.4.0",
     "ohsome-py2",
     "omegaconf>=2.3.0",
-    "openrouteservice>=2.3.3",
+    "openrouteservice==2.4.0",
     "osmnx~=2.0.6",
     "pandas~=2.3.3",
     "plotly>=6.8.0",
