@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Optional
+from typing import Optional, Literal
 
 
 @dataclass
@@ -15,6 +15,7 @@ class IndicatorParams:
 class CustomTopicParams(IndicatorParams):
     topicTitle: str
     topicFilter: str
+    measure: Literal["count", "length", "area"]
 
 
 @dataclass
@@ -29,6 +30,7 @@ def get_indicator_params(
     bpolys: dict,
     title: str,
     filter: str,
+    measure: Literal["count", "length", "area"],
     attribute_title: Optional[str] = None,
     attribute_filter: Optional[str] = None,
 ) -> dict[str, str | dict]:
@@ -39,6 +41,7 @@ def get_indicator_params(
                 bpolys=bpolys,
                 topicTitle=title,
                 topicFilter=filter,
+                measure=measure,
             )
         case "attribute_completeness":
             assert (attribute_title is not None) and (attribute_filter is not None), (
@@ -49,6 +52,7 @@ def get_indicator_params(
                 bpolys=bpolys,
                 topicTitle=title,
                 topicFilter=filter,
+                measure=measure,
                 attributeTitle=attribute_title,
                 attributeFilter=attribute_filter,
             )

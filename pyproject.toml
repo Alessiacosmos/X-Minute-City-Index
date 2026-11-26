@@ -41,7 +41,7 @@ dependencies = [
 module-root = ""
 
 [tool.uv.sources]
-ohsome-py2 = { git = "https://gitlab.heigit.org/climate-action/utilities/ohsome-py2.git", rev = "0.4.0" }
+ohsome-py2 = { git = "https://gitlab.heigit.org/climate-action/utilities/ohsome-py2.git", rev = "0.5.0" }
 
 [build-system]
 requires = ["uv_build>=0.9.0,<0.10.0"]
