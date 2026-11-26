@@ -48,6 +48,7 @@ def xmin_index(
     ohsome_client = OhsomeClient(
         user_agent="CA Research Xmin-city Accessibility",
         base_url=ohsome_quality_settings.ohsome_base_url,
+        api_key=ohsome_quality_settings.ohsome_base_api_key,
     )
 
     # initialize configs

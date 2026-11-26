@@ -1,4 +1,5 @@
 import json
+import time
 from functools import partial
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
@@ -41,12 +42,14 @@ def evaluate_poi_quality(
             evaluate_poi_quality_per_category,
             aoi_geojson=aoi_geojson,
             indicator=indicator,
-            indicator_url=ohsome_quality_settings.indicator_url(indicator),
+            ohsome_quality_settings=ohsome_quality_settings,
             savedir=save_dir,
             attribute_completeness_filters=attribute_completeness_settings,
         )
 
-        with ThreadPool(10) as threadpool:
+        with ThreadPool(
+            ohsome_quality_settings.ohsome_quality_pool_number
+        ) as threadpool:
             result_values = threadpool.map(
                 _evaluate_poi_quality_per_category, poi_setting
             )
@@ -66,7 +69,7 @@ def evaluate_poi_quality_per_category(
     category_setting: POICatogories,
     aoi_geojson: dict,
     indicator: Literal["map_saturation", "attribute_completeness", "currentness"],
-    indicator_url: str,
+    ohsome_quality_settings: OhsomeRelatedSettings,
     savedir: Path,
     attribute_completeness_filters: DictConfig,
 ) -> dict[str, dict[str, Any]]:
@@ -76,8 +79,9 @@ def evaluate_poi_quality_per_category(
         category_name=category_name,
         aoi_geojson=aoi_geojson,
         indicator=indicator,
-        indicator_url=indicator_url,
+        ohsome_quality_settings=ohsome_quality_settings,
         savedir=savedir,
+        topic_measure=category_value.measure,
     )
 
     if indicator == "attribute_completeness":
@@ -141,7 +145,7 @@ def complete_topic_filter(
 ) -> str:
     return (
         basic_filter
-        + " and (geometry:point or geometry:line or geometry:polygon or geometry:other)"
+        + " and (geometry:point or geometry:line or geometry:polygon or geometry:collection)"
     )
 
 
@@ -149,8 +153,9 @@ def call_ohsome_quality_api(
     category_name: str,
     aoi_geojson: dict,
     indicator: Literal["map_saturation", "attribute_completeness", "currentness"],
-    indicator_url: str,
+    ohsome_quality_settings: OhsomeRelatedSettings,
     savedir: Path,
+    topic_measure: Literal["count", "length", "area"],
     topic_filter: str,
     **kwargs,
 ) -> dict[str, dict[str, Any]]:
@@ -160,16 +165,23 @@ def call_ohsome_quality_api(
         bpolys=aoi_geojson,
         title=category_name.capitalize(),
         filter=topic_filter,
+        measure=topic_measure,
         **kwargs,
     )
 
     response = requests.post(
-        indicator_url,
-        headers={"accept": "application/json"},
+        ohsome_quality_settings.indicator_url(indicator),
+        headers=ohsome_quality_settings.quality_headers,
         json=indicator_params,
+        timeout=120,
     )
 
-    response.raise_for_status()
+    if not response.ok:
+        raise requests.HTTPError(
+            f"{response.status_code} for {response.url}: {response.text}",
+            response=response,
+        )
+
     result = response.json()["result"][0]["result"]
 
     if indicator != "attribute_completeness":
@@ -178,5 +190,6 @@ def call_ohsome_quality_api(
         figure.write_json(savedir / f"{indicator}_{category_name}.json")
 
     result.pop("figure")
+    time.sleep(60 / ohsome_quality_settings.ohsome_quality_rate_limit)
 
     return result
