@@ -15,6 +15,7 @@ def culture_leisure_benchmark(poi_count: int):
 
 class TwoLvlFacilitiesCategories(POICatogories):
     education = Category(
+        measure="count",
         weight=0.2,
         subcategories=[
             SubCategory(
@@ -27,6 +28,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
     )
 
     childcare = Category(
+        measure="count",
         weight=0.1,
         subcategories=[
             SubCategory(
@@ -51,6 +53,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
     )
 
     healthcare = Category(
+        measure="count",
         weight=0.1,
         subcategories=[
             SubCategory(
@@ -83,6 +86,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
     )
 
     daily_living = Category(
+        measure="count",
         weight=0.4,
         subcategories=[
             Category(
@@ -158,6 +162,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
     )
 
     public_transport = Category(
+        measure="count",
         weight=0.1,
         subcategories=[
             SubCategory(
@@ -182,6 +187,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
     )
 
     nature_space = Category(
+        measure="area",
         weight=0.05,
         subcategories=[
             SubCategory(
@@ -196,6 +202,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
     )
 
     culture_leisure = Category(
+        measure="count",
         weight=0.02,
         subcategories=[
             SubCategory(
@@ -215,6 +222,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
     )
 
     eating_out = Category(
+        measure="count",
         weight=0.02,
         subcategories=[
             SubCategory(
@@ -239,6 +247,7 @@ class TwoLvlFacilitiesCategories(POICatogories):
     )
 
     pets = Category(
+        measure="count",
         weight=0.01,
         subcategories=[
             SubCategory(

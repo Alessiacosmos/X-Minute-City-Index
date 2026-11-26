@@ -76,7 +76,7 @@ class ORSSettings(BaseSettings):
     ors_duration_rate_limit: int = 40
 
     ors_isochrone_batch_size: int = 5
-    ors_isochrone_pool_number: int = 4
+    ors_isochrone_pool_number: int = 1  # if you have strict quota rate_limit, please set pool_number to 1; otherwise, try 4
     ors_isochrone_rate_limit: int = 40
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")  # dead: disable
@@ -146,16 +146,43 @@ class ORSSettings(BaseSettings):
 
 class OhsomeRelatedSettings(BaseSettings):
     ohsome_base_url: Optional[str] = None
-    ohsome_quality_base_url: str = "https://api.quality.ohsome.org/v1-test"
+    ohsome_api_key: Optional[SecretStr] = None
+    ohsome_quality_base_url: str = "https://api.heigit.org/ohsome-quality-api/v2"
     ohsome_quality_endpoint: str = "/indicators"
 
     indicator_map_saturation: str = "/mapping-saturation"
     indicator_attribute_completeness: str = "/attribute-completeness"
     indicator_currentness: str = "currentness"
 
-    ohsome_quality_headers: dict[str, str] = {"accept": "application/json"}
+    ohsome_quality_pool_number: int = (
+        1  # if you have strict quota rate_limit, please set pool_number to 1
+    )
+    ohsome_quality_rate_limit: int = 15  # requests per minute allowed by your API tier
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @property
+    def ohsome_base_api_key(self) -> str | None:
+        return self.get_api_key_value(self.ohsome_base_url)
+
+    @property
+    def quality_headers(self) -> dict:
+        headers = {"accept": "application/json"}
+        quality_api_key = self.get_api_key_value(self.ohsome_quality_base_url)
+        if quality_api_key is not None:
+            headers["authorization"] = quality_api_key
+        return headers
+
+    def get_api_key_value(self, url: str):
+        if url.startswith("https://api.heigit.org/"):
+            if self.ohsome_api_key is None:
+                raise ValueError(
+                    "You are requesting ohsome quality api, which requires ohsome api key. "
+                    "Please get a free key at account.heigit.org to get access and set `OHSOME_API_KEY` in .env."
+                )
+            return self.ohsome_api_key.get_secret_value()
+        else:
+            return None
 
     # ref: https://github.com/GIScience/ohsome-quality-api-examples/blob/main/OQAPI_grid_request.py
     @cached_property

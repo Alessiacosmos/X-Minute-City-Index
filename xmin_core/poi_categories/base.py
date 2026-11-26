@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import Literal
 
 
 @dataclass
@@ -15,6 +16,7 @@ class Category:
     weight: float
     subcategories: list[SubCategory]
     group: str | None = None
+    measure: Literal["count", "length", "area"] = "count"
 
     def to_tag(self) -> str:
         parts = [
