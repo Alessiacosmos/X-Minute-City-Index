@@ -21,7 +21,7 @@ def xmin_index(
     config_descriptor: Path,
     output_dir: Path,
     aoi_id_col: str = None,
-    time_recorder: bool = True,
+    time_recorder: bool | str = True,
     activated_funcs: list[Literal["accessibility", "quality"]] = ["accessibility"],
     quality_indicators: list[
         Literal["map_saturation", "attribute_completeness", "currentness"]
@@ -35,7 +35,7 @@ def xmin_index(
     :param output_dir: Path where the output layers will be saved.
                        For each AOI, a subdirectory named 'aoi_{id}' will be created to store the results.
     :param aoi_id_col: AOI ID column's name e.g. URAU_CODE
-    :param time_recorder: Whether to record runtime information or not.
+    :param time_recorder: Whether to record runtime information or not; or give the time_recorder file name
     :param activated_funcs: what function you want to activated, accessibility (score) or (ohsome) quality
     :param quality_indicators: what indicator we want to calculate based on ohsome_quality_api
     :return:
@@ -57,7 +57,10 @@ def xmin_index(
 
     # initialize time recorder
     if time_recorder:
-        time_recorder = output_dir / "time_record.csv"
+        time_recorder_name = (
+            time_recorder if isinstance(time_recorder, str) else "time_record.csv"
+        )
+        time_recorder = output_dir / time_recorder_name
         with open(time_recorder, "w") as tf:
             tf.write(f"{aoi_id_col},runtime(min)\n")
 
