@@ -18,6 +18,7 @@ def compute_healthcare_case(
             config_descriptor=config_descriptor,
             output_dir=output_dir,
             aoi_id_col="URAU_CODE",
+            time_recorder=f"time_record_{country_code}.csv",
             activated_funcs=[
                 "accessibility"
             ],  # accessibility only, as in this special case the quality won't change
