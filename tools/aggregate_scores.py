@@ -26,6 +26,9 @@ def aggregate_city_info(
     :param aoi_id_col: AOI ID column's name e.g. URAU_CODE
     :return:
     """
+    output_dir = score_root_dir.parent / "aggregated_category_scores"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     aois = gpd.read_file(aoi_descriptor).to_crs("EPSG:4326")
     print(f"{len(aois)} AOIs found")
 
@@ -108,7 +111,7 @@ def aggregate_city_info(
         category_scores=aoi_category_scores,
         aoi_geoms=aois[[aoi_id_col, "geometry"]],
         aoi_id_col=aoi_id_col,
-        output_dir=score_root_dir.parent / "aggregated_category_scores",
+        output_dir=output_dir,
     )
 
 
